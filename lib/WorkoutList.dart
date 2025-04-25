@@ -3,16 +3,25 @@ import 'dart:collection';
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import 'package:hive_flutter/adapters.dart';
-import 'package:note2fit/base.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:note2fit/ExerciseList.dart';
-import 'package:note2fit/basicClasses/WorkoutModel.dart';
+import 'package:note2fit/models/WorkoutPlanModel.dart';
 
-import 'basicClasses/ExerciseModel.dart';
+import 'ExerciseList.dart';
+import 'base.dart';
+import 'models/ExerciseModel.dart';
+import 'models/ExerciseSetModel.dart';
+import 'models/WorkoutModel.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Hive.initFlutter();
+
+  Hive.registerAdapter(ExerciseSetAdapter());
+  Hive.registerAdapter(ExerciseAdapter());
+  Hive.registerAdapter(WorkoutAdapter());
+  Hive.registerAdapter(WorkoutPlanAdapter());
+
+  await Hive.openBox('workout_plan');
 
   runApp(const MyApp());
 }
@@ -40,45 +49,17 @@ class WorkoutList extends StatefulWidget {
 }
 
 class _WorkoutListState extends State<WorkoutList> {
+
+  @override
+  void initState() {
+    super.initState();
+    BaseClass.saveSampleWorkouts(); // async logic moved here
+  }
+
   @override
   Widget build(BuildContext context) {
     final double workoutHeight = BaseClass.screenHeight * 0.18;
     final double workoutWidth = BaseClass.screenWidth * 0.9;
-
-    /*This will be created from a screen, and saved into a database*/
-    final sampleSet1 = [
-      ExerciseSet(1, 12, 100.0, 9, false),
-      ExerciseSet(2, 12, 95.0, 7, false),
-      ExerciseSet(3, 12, 90.0, 6, false)
-    ];
-    final sampleSet2 = [
-      ExerciseSet(1, 12, 80.0, 8, false),
-      ExerciseSet(2, 12, 75.0, 5, false)
-    ];
-
-    final sampleExerciseList1 = [
-      Exercise("Bench Press", sampleSet1),
-      Exercise("Barbell Row", sampleSet2)
-    ];
-
-    final sampleExerciseList2 = [
-      Exercise("Squats", sampleSet2),
-      Exercise("RDL", sampleSet1)
-    ];
-
-    final chestDay = WorkoutForTheDay("Chest Day", sampleExerciseList1);
-    final legDay = WorkoutForTheDay("Leg Day", sampleExerciseList2);
-
-    var workoutForEachDayOfTheWeek = {
-      "Sunday": chestDay,
-      "Tuesday": legDay
-    };
-
-    final workoutList = [
-      Workout("Main Workout", workoutForEachDayOfTheWeek),
-      Workout("Backup Workout", workoutForEachDayOfTheWeek)
-    ];
-    /*-------------------------------------------------------------*/
 
     return Scaffold(
       backgroundColor: const Color(0xFFEEEEEE),
@@ -119,8 +100,10 @@ class _WorkoutListState extends State<WorkoutList> {
       body: Center(
         child: ListView.builder(
           padding: const EdgeInsets.only(top: 5),
-          itemCount: workoutList.length,
+          itemCount: BaseClass.box.length,
           itemBuilder: (context, i) {
+            final WorkoutPlan workoutPlan = BaseClass.box.get(i);
+
             return Padding(
               padding: const EdgeInsets.only(top: 15, left: 20, right: 20),
 
@@ -159,7 +142,7 @@ class _WorkoutListState extends State<WorkoutList> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  workoutList[i].workoutName,
+                                  workoutPlan.workoutPlanName, /*Display workout plan name*/
                                   style: const TextStyle(
                                       color: Color(0xFF313131),
                                       fontSize: 20,
@@ -168,7 +151,7 @@ class _WorkoutListState extends State<WorkoutList> {
                                 Row(
                                   mainAxisAlignment: MainAxisAlignment.start,
                                   children: List.generate(BaseClass.dayString.length, (j) {
-                                    bool selectedDays = workoutList[i].workoutForTheDay.keys.contains(BaseClass.dayString[j]);
+                                    bool selectedDays = workoutPlan.workoutWeekPlan.keys.contains(BaseClass.dayString[j]);
                                     return Padding(
                                       padding: const EdgeInsets.symmetric(horizontal: 2),
                                       child: Text(
@@ -200,7 +183,7 @@ class _WorkoutListState extends State<WorkoutList> {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                    builder: (context) => WorkoutPage(workout: workoutList[i])),
+                                    builder: (context) => WorkoutPage(workoutPlan: workoutPlan)),
                               );
                             },
                             style: ButtonStyle(

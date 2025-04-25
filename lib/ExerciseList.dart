@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
-import 'package:note2fit/basicClasses/ExerciseModel.dart';
+import 'package:note2fit/models/WorkoutPlanModel.dart';
 
 import 'base.dart';
-import 'basicClasses/WorkoutModel.dart';
+import 'models/ExerciseModel.dart';
+import 'models/WorkoutModel.dart';
 
 class WorkoutPage extends StatelessWidget {
-  const WorkoutPage({super.key, required this.workout});
+  const WorkoutPage({super.key, required this.workoutPlan});
 
-  final Workout workout;
+  final WorkoutPlan workoutPlan;
 
   @override
   Widget build(BuildContext context) {
@@ -18,16 +19,16 @@ class WorkoutPage extends StatelessWidget {
     final double exerciseHeight = BaseClass.screenHeight * 0.18;
     final double exerciseWidth = BaseClass.screenWidth * 0.9;
 
-    final String dayOfTheWeek = DateFormat.EEEE().format(DateTime.now());
+    final String today = DateFormat.EEEE().format(DateTime.now());
 
     String? nameOfWorkoutDay;
-    WorkoutForTheDay? exerciseForTheDay;
+    Workout? workoutForToday;
     List<Exercise>? exerciseList;
 
-    if (workout.workoutForTheDay.containsKey(dayOfTheWeek)) {
-      exerciseForTheDay = workout.workoutForTheDay[dayOfTheWeek];
-      exerciseList = exerciseForTheDay?.exercises;
-      nameOfWorkoutDay = exerciseForTheDay?.workoutDayName;
+    if (workoutPlan.workoutWeekPlan.keys.contains(today)) {
+      workoutForToday = workoutPlan.workoutWeekPlan[today];
+      exerciseList = workoutForToday?.exercises;
+      nameOfWorkoutDay = workoutForToday?.workoutDayName;
     } else {
       nameOfWorkoutDay = "Rest Day";
     }
@@ -58,7 +59,7 @@ class WorkoutPage extends StatelessWidget {
         automaticallyImplyLeading: false,
         backgroundColor: const Color(0xFF005EAA),
         title: Text(
-            dayOfTheWeek,
+            today,
           style: const TextStyle(
             color: Colors.white,
             fontSize: 14,
@@ -117,7 +118,7 @@ class WorkoutPage extends StatelessWidget {
 
           /*Exercise list / Rest of the page*/
           Expanded(
-              child: workout.workoutForTheDay.containsKey(dayOfTheWeek) ? ListView.builder(
+              child: workoutPlan.workoutWeekPlan.keys.contains(today) ? ListView.builder(
                   padding: const EdgeInsets.only(top: 5),
                   itemCount: exerciseList?.length,
                   itemBuilder: (context, i) {
