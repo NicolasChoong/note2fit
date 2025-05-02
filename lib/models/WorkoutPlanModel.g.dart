@@ -17,18 +17,21 @@ class WorkoutPlanAdapter extends TypeAdapter<WorkoutPlan> {
       for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
     };
     return WorkoutPlan(
-      fields[0] as String,
-      (fields[1] as Map).cast<String, Workout>(),
+      fields[0] as int,
+      fields[1] as String,
+      (fields[2] as Map).cast<String, Workout>(),
     );
   }
 
   @override
   void write(BinaryWriter writer, WorkoutPlan obj) {
     writer
-      ..writeByte(2)
+      ..writeByte(3)
       ..writeByte(0)
-      ..write(obj.workoutPlanName)
+      ..write(obj.workoutPlanId)
       ..writeByte(1)
+      ..write(obj.workoutPlanName)
+      ..writeByte(2)
       ..write(obj.workoutWeekPlan);
   }
 

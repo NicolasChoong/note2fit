@@ -4,12 +4,15 @@ import 'ExerciseSetModel.dart';
 part 'ExerciseModel.g.dart';
 
 @HiveType(typeId: 1)
-class Exercise {
+class Exercise extends HiveObject {
   @HiveField(0)
-  final String exerciseName;
+  String exerciseName;
 
   @HiveField(1)
-  final List<ExerciseSet> exerciseSets;
+  List<ExerciseSet> exerciseSets;
 
-  Exercise(this.exerciseName, this.exerciseSets);
+  @HiveField(2)
+  bool isExerciseDone = false;
+
+  Exercise(this.exerciseName, this.exerciseSets, this.isExerciseDone);
 }

@@ -33,33 +33,36 @@ class BaseClass {
     ];
 
     final sampleExerciseList1 = [
-      Exercise("Bench Press", sampleSet1),
-      Exercise("Barbell Row", sampleSet2)
+      Exercise("Bench Press", sampleSet1, false),
+      Exercise("Barbell Row", sampleSet2, false)
     ];
 
     final sampleExerciseList2 = [
-      Exercise("Squats", sampleSet2),
-      Exercise("RDL", sampleSet1)
+      Exercise("Squats", sampleSet2, false),
+      Exercise("RDL", sampleSet1, false)
     ];
 
-    final chestDay = Workout("Chest Day", sampleExerciseList1);
-    final legDay = Workout("Leg Day", sampleExerciseList2);
+    final chestDay = Workout("Chest Day", sampleExerciseList1, false, DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day));
+    final legDay = Workout("Leg Day", sampleExerciseList2, false, DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day));
 
     var workoutWeekPlan = {
-      "Sunday": chestDay,
-      "Tuesday": legDay
+      "Monday": chestDay,
+      "Tuesday": legDay,
+      "Wednesday": chestDay,
+      "Thursday": legDay
     };
 
     var workoutWeekPlan2 = {
-      "Monday": chestDay,
-      "Friday": legDay
+      "Friday": chestDay,
+      "Saturday": legDay,
+      "Sunday": chestDay
     };
 
-    var workoutPlan = WorkoutPlan("Main Workout", workoutWeekPlan);
-    var workoutPlan2 = WorkoutPlan("Backup Workout", workoutWeekPlan2);
+    var workoutPlan = WorkoutPlan(0, "Main Workout", workoutWeekPlan);
+    var workoutPlan2 = WorkoutPlan(1, "Backup Workout", workoutWeekPlan2);
 
     await BaseClass.box.clear();
-    await BaseClass.box.put(0, workoutPlan);
-    await BaseClass.box.put(1, workoutPlan2);
+    await BaseClass.box.put(workoutPlan.workoutPlanId, workoutPlan);
+    await BaseClass.box.put(workoutPlan2.workoutPlanId, workoutPlan2);
   }
 }

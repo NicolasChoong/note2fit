@@ -6,12 +6,18 @@ part 'WorkoutModel.g.dart';
 @HiveType(typeId: 2)
 class Workout {
   @HiveField(0)
-  final String workoutDayName;
+  String workoutDayName;
 
   @HiveField(1)
-  final List<Exercise> exercises;
+  List<Exercise> exercises;
 
-  Workout(this.workoutDayName, this.exercises);
+  @HiveField(2)
+  bool isWorkoutDone = false;
+
+  @HiveField(3)
+  DateTime lastWorkoutDate;
+
+  Workout(this.workoutDayName, this.exercises, this.isWorkoutDone, this.lastWorkoutDate);
 }
 
 /*
