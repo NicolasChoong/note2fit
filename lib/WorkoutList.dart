@@ -24,7 +24,7 @@ Future<void> main() async {
 
   await Hive.openBox('workout_plan');
 
-  /*BaseClass.saveSampleWorkouts();*/ // async logic moved here
+  await BaseClass.saveSampleWorkouts();
 
   runApp(const MyApp());
 }

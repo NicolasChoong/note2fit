@@ -7,16 +7,12 @@ import 'ExercisePage.dart';
 import 'base.dart';
 import 'models/ExerciseModel.dart';
 import 'models/ExerciseSetModel.dart';
-import 'models/WorkoutModel.dart';
 
+//Get today's date for workout day
 final String today = DateFormat.EEEE().format(DateTime.now());
-late int workoutPlanId;
-late WorkoutPlan workoutPlan;
-late String? nameOfWorkoutDay;
-late List<Exercise>? exerciseList;
-late bool? isWorkoutDone;
-DateTime? lastWorkoutDate;
-DateTime todayDate = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
+
+//Get today's date for workout date comparison
+final DateTime todayDate = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
 
 class ExerciseList extends StatefulWidget {
   const ExerciseList({super.key, required this.workoutPlanId});
@@ -28,6 +24,16 @@ class ExerciseList extends StatefulWidget {
 }
 
 class _ExerciseListState extends State<ExerciseList> {
+  //Init workout plan and id for saving into hive box
+  late int workoutPlanId;
+  late WorkoutPlan workoutPlan;
+
+  //Get value from workout plan for this page
+  late String? nameOfWorkoutDay;
+  late List<Exercise>? exerciseList;
+  late bool? isWorkoutDone;
+  DateTime? lastWorkoutDate;
+
   void loadData(){
     setState(() {
       workoutPlanId = widget.workoutPlanId;
@@ -39,8 +45,9 @@ class _ExerciseListState extends State<ExerciseList> {
         lastWorkoutDate = workoutPlan.workoutWeekPlan[today]?.lastWorkoutDate;
 
         if (todayDate.isAfter(lastWorkoutDate!)) {
-          lastWorkoutDate = todayDate;
-          isWorkoutDone = false;
+          debugPrint("Today date $todayDate and last workout date $lastWorkoutDate");
+          workoutPlan.workoutWeekPlan[today]?.lastWorkoutDate = todayDate;
+          workoutPlan.workoutWeekPlan[today]?.isWorkoutDone = false;
           for (Exercise exercise in exerciseList!) {
             exercise.isExerciseDone = false;
             for (ExerciseSet exerciseSet in exercise.exerciseSets) {
