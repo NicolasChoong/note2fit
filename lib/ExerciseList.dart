@@ -8,7 +8,7 @@ import 'base.dart';
 import 'models/ExerciseModel.dart';
 import 'models/ExerciseSetModel.dart';
 
-//Get today's date for workout day
+//REMOVE SOON
 final String today = DateFormat.EEEE().format(DateTime.now());
 
 //Get today's date for workout date comparison
@@ -29,6 +29,9 @@ class _ExerciseListState extends State<ExerciseList> {
   late WorkoutPlan workoutPlan;
 
   //Get value from workout plan for this page
+  late DateTime startDateOfWorkoutPlan;
+  late int daysPassed ;
+  late int todayWorkout;
   late String? nameOfWorkoutDay;
   late List<Exercise>? exerciseList;
   late bool? isWorkoutDone;
@@ -38,16 +41,21 @@ class _ExerciseListState extends State<ExerciseList> {
     setState(() {
       workoutPlanId = widget.workoutPlanId;
       workoutPlan = BaseClass.box.get(workoutPlanId);
-      if (workoutPlan.workoutWeekPlan.keys.contains(today)) {
-        nameOfWorkoutDay = workoutPlan.workoutWeekPlan[today]?.workoutDayName;
-        exerciseList = workoutPlan.workoutWeekPlan[today]?.exercises;
-        isWorkoutDone = workoutPlan.workoutWeekPlan[today]?.isWorkoutDone;
-        lastWorkoutDate = workoutPlan.workoutWeekPlan[today]?.lastWorkoutDate;
+
+      startDateOfWorkoutPlan = workoutPlan.workoutPlanStartDate;
+      daysPassed = todayDate.difference(startDateOfWorkoutPlan).inDays;
+      todayWorkout = daysPassed % workoutPlan.workoutPlanDays.length;
+
+      if (workoutPlan.workoutPlanDays[todayWorkout] != null) {
+        nameOfWorkoutDay = workoutPlan.workoutPlanDays[todayWorkout]?.workoutDayName;
+        exerciseList = workoutPlan.workoutPlanDays[todayWorkout]?.exercises;
+        isWorkoutDone = workoutPlan.workoutPlanDays[todayWorkout]?.isWorkoutDone;
+        lastWorkoutDate = workoutPlan.workoutPlanDays[todayWorkout]?.lastWorkoutDate;
 
         if (todayDate.isAfter(lastWorkoutDate!)) {
           debugPrint("Today date $todayDate and last workout date $lastWorkoutDate");
-          workoutPlan.workoutWeekPlan[today]?.lastWorkoutDate = todayDate;
-          workoutPlan.workoutWeekPlan[today]?.isWorkoutDone = false;
+          workoutPlan.workoutPlanDays[todayWorkout]?.lastWorkoutDate = todayDate;
+          workoutPlan.workoutPlanDays[todayWorkout]?.isWorkoutDone = false;
           for (Exercise exercise in exerciseList!) {
             exercise.isExerciseDone = false;
             for (ExerciseSet exerciseSet in exercise.exerciseSets) {
@@ -124,7 +132,7 @@ class _ExerciseListState extends State<ExerciseList> {
 
           /*Exercise list / Rest of the page*/
           Expanded(
-              child: workoutPlan.workoutWeekPlan.keys.contains(today)
+              child: workoutPlan.workoutPlanDays[todayWorkout] != null
                   ? (exerciseList != null && exerciseList!.isNotEmpty
                       ? ListView.builder(
                           padding: const EdgeInsets.only(top: 5),

@@ -12,7 +12,10 @@ class WorkoutPlan {
   String workoutPlanName;
 
   @HiveField(2)
-  Map<String, Workout> workoutWeekPlan;
+  DateTime workoutPlanStartDate;
 
-  WorkoutPlan(this.workoutPlanId, this.workoutPlanName, this.workoutWeekPlan);
+  @HiveField(3)
+  List<Workout?> workoutPlanDays;
+
+  WorkoutPlan(this.workoutPlanId, this.workoutPlanName, this.workoutPlanStartDate, this.workoutPlanDays);
 }

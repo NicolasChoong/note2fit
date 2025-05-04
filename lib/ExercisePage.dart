@@ -8,8 +8,11 @@ import 'package:note2fit/models/ExerciseSetModel.dart';
 import 'base.dart';
 import 'models/WorkoutPlanModel.dart';
 
-//Get today's date for workout day
+//REMOVE SOON
 final String today = DateFormat.EEEE().format(DateTime.now());
+
+//Get today's date for workout date comparison
+final DateTime todayDate = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
 
 //These variables are made global, and they are 2 states that needs to use these
 //Init workout plan and id for saving into hive box
@@ -38,7 +41,12 @@ class _ExercisePageState extends State<ExercisePage> {
     workoutPlanId = widget.workoutPlanId;
     workoutPlan = BaseClass.box.get(workoutPlanId);
 
-    exercise = workoutPlan.workoutWeekPlan[today]!.exercises[widget.exerciseNum];
+    //Get today's workout for exercise variable only
+    final DateTime startDateOfWorkoutPlan = workoutPlan.workoutPlanStartDate;
+    final int daysPassed = todayDate.difference(startDateOfWorkoutPlan).inDays;
+    final int todayWorkout = daysPassed % workoutPlan.workoutPlanDays.length;
+
+    exercise = workoutPlan.workoutPlanDays[todayWorkout]!.exercises[widget.exerciseNum];
 
     String nameOfExercise = exercise.exerciseName;
     exerciseSetList = exercise.exerciseSets;

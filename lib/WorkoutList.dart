@@ -24,7 +24,7 @@ Future<void> main() async {
 
   await Hive.openBox('workout_plan');
 
-  await BaseClass.saveSampleWorkouts();
+  /*await BaseClass.saveSampleWorkouts();*/
 
   runApp(const MyApp());
 }
@@ -159,24 +159,6 @@ class _WorkoutListState extends State<WorkoutList> {
                             color: Color(0xFF313131),
                             fontSize: 20,
                             fontWeight: FontWeight.bold),
-                      ),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        children: List.generate(BaseClass.dayString.length, (j) {
-                          bool selectedDays = workoutPlan.workoutWeekPlan.keys.contains(BaseClass.dayString[j]);
-                          return Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 2),
-                            child: Text(
-                              BaseClass.dayString[j][0],
-                              style: TextStyle(
-                                  color: selectedDays
-                                      ? const Color(0xFF005EAA)
-                                      : const Color(0xFF696969),
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600),
-                            ),
-                          );
-                        }),
                       ),
                     ],
                   ),
