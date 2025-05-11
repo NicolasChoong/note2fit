@@ -1,7 +1,5 @@
-import 'dart:collection';
 
 import 'package:flutter/material.dart';
-import 'package:hive/hive.dart';
 import 'package:hive_flutter/adapters.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:note2fit/models/WorkoutPlanModel.dart';
@@ -24,7 +22,7 @@ Future<void> main() async {
 
   await Hive.openBox('workout_plan');
 
-  /*await BaseClass.saveSampleWorkouts();*/
+  await BaseClass.saveSampleWorkouts();
 
   runApp(const MyApp());
 }
@@ -117,8 +115,8 @@ class _WorkoutListState extends State<WorkoutList> {
   }
 
   Container workoutContainer(WorkoutPlan workoutPlan) {
-    final double workoutHeight = BaseClass.screenHeight * 0.18;
-    final double workoutWidth = BaseClass.screenWidth * 0.9;
+    double workoutHeight = BaseClass.screenHeight * 0.18;
+    double workoutWidth = BaseClass.screenWidth * 0.9;
     
     return Container(
       height: workoutHeight,

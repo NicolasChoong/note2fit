@@ -5,19 +5,16 @@ part 'ExerciseSetModel.g.dart';
 @HiveType(typeId: 0)
 class ExerciseSet {
   @HiveField(0)
-  int setNum;
-
-  @HiveField(1)
   int setTargetReps;
 
-  @HiveField(2)
+  @HiveField(1)
   double setCurrentWeight;
 
-  @HiveField(3)
+  @HiveField(2)
   int setCurrentReps;
 
-  @HiveField(4)
+  @HiveField(3)
   bool isSetDone = false;
 
-  ExerciseSet(this.setNum, this.setTargetReps, this.setCurrentWeight, this.setCurrentReps, this.isSetDone);
+  ExerciseSet(this.setTargetReps, this.setCurrentWeight, this.setCurrentReps, this.isSetDone);
 }

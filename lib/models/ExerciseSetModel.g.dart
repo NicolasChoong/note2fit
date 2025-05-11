@@ -18,26 +18,23 @@ class ExerciseSetAdapter extends TypeAdapter<ExerciseSet> {
     };
     return ExerciseSet(
       fields[0] as int,
-      fields[1] as int,
-      fields[2] as double,
-      fields[3] as int,
-      fields[4] as bool,
+      fields[1] as double,
+      fields[2] as int,
+      fields[3] as bool,
     );
   }
 
   @override
   void write(BinaryWriter writer, ExerciseSet obj) {
     writer
-      ..writeByte(5)
-      ..writeByte(0)
-      ..write(obj.setNum)
-      ..writeByte(1)
-      ..write(obj.setTargetReps)
-      ..writeByte(2)
-      ..write(obj.setCurrentWeight)
-      ..writeByte(3)
-      ..write(obj.setCurrentReps)
       ..writeByte(4)
+      ..writeByte(0)
+      ..write(obj.setTargetReps)
+      ..writeByte(1)
+      ..write(obj.setCurrentWeight)
+      ..writeByte(2)
+      ..write(obj.setCurrentReps)
+      ..writeByte(3)
       ..write(obj.isSetDone);
   }
 

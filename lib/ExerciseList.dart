@@ -7,9 +7,7 @@ import 'ExercisePage.dart';
 import 'base.dart';
 import 'models/ExerciseModel.dart';
 import 'models/ExerciseSetModel.dart';
-
-//REMOVE SOON
-final String today = DateFormat.EEEE().format(DateTime.now());
+import 'models/WorkoutModel.dart';
 
 //Get today's date for workout date comparison
 final DateTime todayDate = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
@@ -27,46 +25,42 @@ class _ExerciseListState extends State<ExerciseList> {
   //Init workout plan and id for saving into hive box
   late int workoutPlanId;
   late WorkoutPlan workoutPlan;
-
-  //Get value from workout plan for this page
-  late DateTime startDateOfWorkoutPlan;
-  late int daysPassed ;
-  late int todayWorkout;
-  late String? nameOfWorkoutDay;
-  late List<Exercise>? exerciseList;
-  late bool? isWorkoutDone;
-  DateTime? lastWorkoutDate;
+  Workout? workoutToday;
+  List<Exercise>? exerciseList;
 
   void loadData(){
     setState(() {
       workoutPlanId = widget.workoutPlanId;
       workoutPlan = BaseClass.box.get(workoutPlanId);
 
-      startDateOfWorkoutPlan = workoutPlan.workoutPlanStartDate;
-      daysPassed = todayDate.difference(startDateOfWorkoutPlan).inDays;
-      todayWorkout = daysPassed % workoutPlan.workoutPlanDays.length;
+      final int daysPassed = todayDate.difference(workoutPlan.workoutPlanStartDate).inDays;
+      final int todayWorkoutNum = daysPassed % workoutPlan.workoutPlanDays.length;
+      workoutToday = workoutPlan.workoutPlanDays[todayWorkoutNum]!;
 
-      if (workoutPlan.workoutPlanDays[todayWorkout] != null) {
-        nameOfWorkoutDay = workoutPlan.workoutPlanDays[todayWorkout]?.workoutDayName;
-        exerciseList = workoutPlan.workoutPlanDays[todayWorkout]?.exercises;
-        isWorkoutDone = workoutPlan.workoutPlanDays[todayWorkout]?.isWorkoutDone;
-        lastWorkoutDate = workoutPlan.workoutPlanDays[todayWorkout]?.lastWorkoutDate;
+      if (workoutToday != null) {
+        /*nameOfWorkoutDay = workoutPlan.workoutPlanDays[todayWorkoutNum]?.workoutDayName;
+        exerciseList = workoutPlan.workoutPlanDays[todayWorkoutNum]?.exercises;
+        isWorkoutDone = workoutPlan.workoutPlanDays[todayWorkoutNum]?.isWorkoutDone;*/
+        DateTime? lastWorkoutDate = workoutPlan.workoutPlanDays[todayWorkoutNum]?.lastWorkoutDate;
 
         if (todayDate.isAfter(lastWorkoutDate!)) {
           debugPrint("Today date $todayDate and last workout date $lastWorkoutDate");
-          workoutPlan.workoutPlanDays[todayWorkout]?.lastWorkoutDate = todayDate;
-          workoutPlan.workoutPlanDays[todayWorkout]?.isWorkoutDone = false;
-          for (Exercise exercise in exerciseList!) {
-            exercise.isExerciseDone = false;
-            for (ExerciseSet exerciseSet in exercise.exerciseSets) {
-              exerciseSet.isSetDone = false;
+          workoutToday?.lastWorkoutDate = todayDate;
+          workoutToday?.isWorkoutDone = false;
+
+          exerciseList = workoutToday?.exercises;
+
+          if (exerciseList != null && exerciseList!.isNotEmpty) {
+            for (Exercise exercise in exerciseList!) {
+              exercise.isExerciseDone = false;
+              for (ExerciseSet exerciseSet in exercise.exerciseSets) {
+                exerciseSet.isSetDone = false;
+              }
             }
           }
 
           BaseClass.box.put(workoutPlanId, workoutPlan);
         }
-      } else {
-        nameOfWorkoutDay = "Rest Day";
       }
     });
   }
@@ -86,9 +80,9 @@ class _ExerciseListState extends State<ExerciseList> {
         toolbarHeight: BaseClass.screenHeight * 0.04,
         automaticallyImplyLeading: false,
         backgroundColor: const Color(0xFF005EAA),
-        title: Text(
-          today,
-          style: const TextStyle(
+        title: const Text(
+          "DEEZ NUTS",
+          style: TextStyle(
               color: Colors.white, fontSize: 14, fontWeight: FontWeight.w500),
         ),
       ),
@@ -120,7 +114,7 @@ class _ExerciseListState extends State<ExerciseList> {
                       )),
                 ),
                 Text(
-                  nameOfWorkoutDay!,
+                  workoutToday?.workoutDayName ?? "Rest Day",
                   style: const TextStyle(
                       color: Color(0xFF262626),
                       fontSize: 20,
@@ -132,7 +126,7 @@ class _ExerciseListState extends State<ExerciseList> {
 
           /*Exercise list / Rest of the page*/
           Expanded(
-              child: workoutPlan.workoutPlanDays[todayWorkout] != null
+              child: workoutToday?.workoutDayName != null
                   ? (exerciseList != null && exerciseList!.isNotEmpty
                       ? ListView.builder(
                           padding: const EdgeInsets.only(top: 5),

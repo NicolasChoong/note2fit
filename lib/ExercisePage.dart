@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:intl/intl.dart';
@@ -7,9 +6,6 @@ import 'package:note2fit/models/ExerciseSetModel.dart';
 
 import 'base.dart';
 import 'models/WorkoutPlanModel.dart';
-
-//REMOVE SOON
-final String today = DateFormat.EEEE().format(DateTime.now());
 
 //Get today's date for workout date comparison
 final DateTime todayDate = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
@@ -20,8 +16,8 @@ late int workoutPlanId;
 late WorkoutPlan workoutPlan;
 
 //Get value from workout plan for this page
-late Exercise exercise;
-late List<ExerciseSet> exerciseSetList;
+Exercise? exercise;
+List<ExerciseSet>? exerciseSetList;
 
 class ExercisePage extends StatefulWidget {
   const ExercisePage({super.key, required this.workoutPlanId, required this.exerciseNum});
@@ -45,11 +41,13 @@ class _ExercisePageState extends State<ExercisePage> {
     final DateTime startDateOfWorkoutPlan = workoutPlan.workoutPlanStartDate;
     final int daysPassed = todayDate.difference(startDateOfWorkoutPlan).inDays;
     final int todayWorkout = daysPassed % workoutPlan.workoutPlanDays.length;
+    String nameOfExercise = "";
 
     exercise = workoutPlan.workoutPlanDays[todayWorkout]!.exercises[widget.exerciseNum];
-
-    String nameOfExercise = exercise.exerciseName;
-    exerciseSetList = exercise.exerciseSets;
+    if (exercise != null) {
+      nameOfExercise = exercise!.exerciseName;
+      exerciseSetList = exercise?.exerciseSets;
+    }
 
     return Scaffold(
       backgroundColor: const Color(0xFFEEEEEE),
@@ -75,9 +73,9 @@ class _ExercisePageState extends State<ExercisePage> {
 
       /*Body containing a list of sets*/
       body: Center(
-        child: exerciseSetList.isNotEmpty ? ListView.builder(
+        child: exerciseSetList != null && exerciseSetList!.isNotEmpty ? ListView.builder(
           padding: const EdgeInsets.only(top: 5),
-          itemCount: exerciseSetList.length,
+          itemCount: exerciseSetList?.length,
           itemBuilder: (context, i) {
             return Padding(
               padding: const EdgeInsets.only(top: 15, left: 20, right: 20),
@@ -164,9 +162,9 @@ class _ExerciseSetItemState extends State<ExerciseSetItem> {
     exerciseSet = widget.workoutPlan.workoutWeekPlan[today]!.exercises[widget.exerciseNum].exerciseSets[widget.exerciseSetNum];
     weightController = TextEditingController(text: exerciseSet.setCurrentWeight.toString());
     repsController = TextEditingController(text: exerciseSet.setCurrentReps.toString());*/
-    exerciseSet = exerciseSetList[widget.exerciseSetNum];
     weightController = TextEditingController(text: exerciseSet.setCurrentWeight.toString());
     repsController = TextEditingController(text: exerciseSet.setCurrentReps.toString());
+    exerciseSet = exerciseSetList![widget.exerciseSetNum];
   }
 
   @override
@@ -182,7 +180,7 @@ class _ExerciseSetItemState extends State<ExerciseSetItem> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text("Set ${widget.exerciseSetNum + 1}"),
-        Text("Weight"),
+        const Text("Weight"),
         TextField(
           controller: weightController,
           keyboardType: TextInputType.number,
@@ -205,10 +203,10 @@ class _ExerciseSetItemState extends State<ExerciseSetItem> {
           onPressed: () {
             setState(() {
               exerciseSet.isSetDone = !exerciseSet.isSetDone;
-              if (exerciseSetList.every((x) => x.isSetDone)) {
-                exercise.isExerciseDone = true;
+              if (exerciseSetList!.every((x) => x.isSetDone)) {
+                exercise?.isExerciseDone = true;
               } else {
-                exercise.isExerciseDone = false;
+                exercise?.isExerciseDone = false;
               }
               BaseClass.box.put(workoutPlanId, workoutPlan);
             });

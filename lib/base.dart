@@ -23,13 +23,13 @@ class BaseClass {
 
   static Future<void> saveSampleWorkouts() async {
     final sampleSet1 = [
-      ExerciseSet(1, 12, 100.0, 9, false),
-      ExerciseSet(2, 12, 95.0, 7, false),
-      ExerciseSet(3, 12, 90.0, 6, false)
+      ExerciseSet(12, 100.0, 9, false),
+      ExerciseSet(12, 95.0, 7, false),
+      ExerciseSet(12, 90.0, 6, false)
     ];
     final sampleSet2 = [
-      ExerciseSet(1, 12, 80.0, 8, false),
-      ExerciseSet(2, 12, 75.0, 5, false)
+      ExerciseSet(12, 80.0, 8, false),
+      ExerciseSet(12, 75.0, 5, false)
     ];
 
     final sampleExerciseList1 = [
