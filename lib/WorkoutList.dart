@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/adapters.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'dart:math' as math;
 import 'package:note2fit/models/WorkoutPlanModel.dart';
 
 import 'ExerciseList.dart';
@@ -62,10 +63,8 @@ class _WorkoutListState extends State<WorkoutList> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFEEEEEE),
-
       /*Main App Bar*/
       appBar: appBarDesign(),
-
       /*Body containing lists of workouts*/
       body: Center(
         child: ListView.builder(
@@ -84,7 +83,7 @@ class _WorkoutListState extends State<WorkoutList> {
     );
   }
 
-  // App bar widget
+  /*App bar widget*/
   PreferredSize appBarDesign() {
     return PreferredSize(
       preferredSize: Size.fromHeight(BaseClass.appBarHeight),
@@ -117,6 +116,7 @@ class _WorkoutListState extends State<WorkoutList> {
     );
   }
 
+  /*Workout container widget*/
   InkWell workoutContainer(WorkoutPlan workoutPlan) {
     double workoutHeight = BaseClass.screenHeight * 0.18;
     double workoutWidth = BaseClass.screenWidth * 0.9;
@@ -135,7 +135,7 @@ class _WorkoutListState extends State<WorkoutList> {
       }
       return "0";
     }
-    
+
     return InkWell(
       onTap: () {
         Navigator.push(
@@ -154,14 +154,14 @@ class _WorkoutListState extends State<WorkoutList> {
               style: BorderStyle.solid,
               width: 1
           ),
-          boxShadow: workoutPlan.isDefaultWorkoutPlan ? const [
+          boxShadow: workoutPlan.isDefaultWorkoutPlan ? const [ /*Highlight default workout in blue*/
             BoxShadow(
               color: Color(0x80005EAA),
               spreadRadius: 0,
               blurRadius: 5,
               offset: Offset(0, 0),
             ),
-          ] : const [
+          ] : const [ /*Highlight other workout in gray*/
             BoxShadow(
               color: Color(0x1A000000),
               spreadRadius: 0,
@@ -170,125 +170,151 @@ class _WorkoutListState extends State<WorkoutList> {
             ),
           ],
         ),
-        child: Column(
+        child: Column( /*Separate text and button*/
           children: [
-            Column(
-              children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Text(
-                          workoutPlan.workoutPlanName,
-                          style: const TextStyle(
-                            color: Color(0xFF313131),
-                            fontSize: 20,
-                            fontWeight: FontWeight.w600
-                          ),
+            Padding(
+              padding: const EdgeInsets.only(left: 15, top: 5, right: 15, bottom: 10),
+              child: Column( /*Separate workout name and day details*/
+                children: [
+                  Row( /*Workout name and buttons*/
+                    children: [
+                      Text(
+                        workoutPlan.workoutPlanName,
+                        style: const TextStyle(
+                          color: Color(0xFF313131),
+                          fontSize: 20,
+                          fontWeight: FontWeight.w600
                         ),
-                        const Spacer(),
-                        IconButton(
-                          onPressed: () {},
-                          icon: SvgPicture.asset(
-                            'images/edit-icon.svg',
-                            height: 18,
-                          ),
+                      ),
+                      const Spacer(),
+                      IconButton(
+                        onPressed: () {},
+                        icon: SvgPicture.asset(
+                          'images/edit-icon.svg',
+                          height: 18,
                         ),
-                        IconButton(
-                          onPressed: () {},
-                          icon: SvgPicture.asset(
-                            'images/back-icon.svg',
-                            height: 18,
-                          ),
-                        )
-                      ],
-                    ),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          "Today",
-                          style: TextStyle(
-                            color: Color(0xFF696969),
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600
-                          ),
+                      ),
+                      const SizedBox(width: 10),
+                      SvgPicture.asset(
+                        'images/back-icon.svg',
+                        height: 18,
+                      )
+                    ],
+                  ),
+                  Column( /*Day details*/
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        "Today",
+                        style: TextStyle(
+                          color: Color(0xFF696969),
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600
                         ),
-                        todayWorkout != null ? Row(
-                          children: [
-                            SvgPicture.asset(
-                              'images/weight-icon.svg',
-                              height: 15,
+                      ),
+                      todayWorkout != null ? Row(
+                        children: [
+                          SvgPicture.asset(
+                            'images/weight-icon.svg',
+                            height: 15,
+                          ),
+                          const SizedBox(width: 5),
+                          Text(
+                            todayWorkout.workoutDayName,
+                            style: const TextStyle(
+                              color: Color(0xFF696969),
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500
                             ),
-                            const SizedBox(
-                              width: 5,
-                            ),
-                            Text(
-                              todayWorkout!.workoutDayName,
-                              style: const TextStyle(
+                          ),
+                          Container(
+                            width: 1.5,
+                            height: 12,
+                            color: const Color(0xFFE0E0E0),
+                            margin: const EdgeInsets.symmetric(horizontal: 8),
+                          ),
+                          Text(
+                            "${todayWorkout.exercises.length.toString()} exercises",
+                            style: const TextStyle(
                                 color: Color(0xFF696969),
                                 fontSize: 12,
                                 fontWeight: FontWeight.w500
-                              ),
                             ),
-                            Container(
-                              width: 1.5, // Line thickness
-                              height: 12, // Line height
-                              color: const Color(0xFFE0E0E0), // Line color
-                              margin: const EdgeInsets.symmetric(horizontal: 8), // Space around the line
+                          ),
+                          Container(
+                            width: 1.5, // Line thickness
+                            height: 12, // Line height
+                            color: const Color(0xFFE0E0E0), // Line color
+                            margin: const EdgeInsets.symmetric(horizontal: 8), // Space around the line
+                          ),
+                          Text(
+                            "${todayWorkoutTotalSets()} sets",
+                            style: const TextStyle(
+                                color: Color(0xFF696969),
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500
                             ),
-                            Text(
-                              "${todayWorkout.exercises.length.toString()} exercises",
-                              style: const TextStyle(
-                                  color: Color(0xFF696969),
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w500
-                              ),
+                          )
+                        ],
+                      ) : Row(
+                        children: [
+                          SvgPicture.asset(
+                            'images/rest-icon.svg',
+                            height: 15,
+                          ),
+                          const SizedBox(width: 5),
+                          const Text(
+                            "Rest Day",
+                            style: TextStyle(
+                                color: Color(0xFF696969),
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500
                             ),
-                            Container(
-                              width: 1.5, // Line thickness
-                              height: 12, // Line height
-                              color: const Color(0xFFE0E0E0), // Line color
-                              margin: const EdgeInsets.symmetric(horizontal: 8), // Space around the line
-                            ),
-                            Text(
-                              "${todayWorkoutTotalSets()} sets",
-                              style: const TextStyle(
-                                  color: Color(0xFF696969),
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w500
-                              ),
-                            )
-                          ],
-                        ) : Row(
-                          children: [
-                            SvgPicture.asset(
-                              'images/rest-icon.svg',
-                              height: 15,
-                            ),
-                            const SizedBox(
-                              width: 5,
-                            ),
-                            const Text(
-                              "Rest Day",
-                              style: TextStyle(
-                                  color: Color(0xFF696969),
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w500
-                              ),
-                            )
-                          ],
-                        )
-                      ],
-                    )
-                  ],
-                ),
-              ],
+                          )
+                        ],
+                      )
+                    ],
+                  ),
+                ],
+              ),
             ),
-            ElevatedButton(
-                onPressed: () {},
-                child: const Text("BRUHAT")
+            Container( /*View info button*/
+              width: double.infinity,
+              height: 35,
+              decoration: const BoxDecoration(
+                border: Border(top: BorderSide(color: Color(0xFFE0E0E0), width: 1)),
+              ),
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  foregroundColor: const Color(0xFF696969),
+                  backgroundColor: const Color(0xFFF8F8F8),
+                  shape: const RoundedRectangleBorder(
+                    borderRadius: BorderRadius.only(bottomLeft: Radius.circular(10), bottomRight: Radius.circular(10))
+                  ),
+                  elevation: 0,
+                ),
+                  onPressed: () {},
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Text(
+                          "View Info ",
+                        style: TextStyle(
+                          color: Color(0xFF005EAA),
+                          fontWeight: FontWeight.w500
+                        ),
+                      ),
+                      Transform.rotate(
+                          angle: math.pi / 2,
+                        child: SvgPicture.asset(
+                          'images/dropdown-icon.svg',
+                          height: 10,
+                          color: const Color(0xFF005EAA),
+                        ),
+                      )
+                    ],
+                  )
+              ),
             )
           ],
         ),
