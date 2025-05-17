@@ -46,7 +46,7 @@ class _ExercisePageState extends State<ExercisePage> {
     exercise = workoutPlan.workoutPlanDays[todayWorkout]!.exercises[widget.exerciseNum];
     if (exercise != null) {
       nameOfExercise = exercise!.exerciseName;
-      exerciseSetList = exercise?.exerciseSets;
+      exerciseSetList = exercise!.exerciseSets;
     }
 
     return Scaffold(
@@ -54,7 +54,7 @@ class _ExercisePageState extends State<ExercisePage> {
 
       /*Main App Bar*/
       appBar: PreferredSize(
-        preferredSize: Size.fromHeight(BaseClass.topBarHeight),
+        preferredSize: Size.fromHeight(BaseClass.appBarHeight),
         child: Container(
           decoration: const BoxDecoration(
             boxShadow: [
@@ -73,7 +73,7 @@ class _ExercisePageState extends State<ExercisePage> {
 
       /*Body containing a list of sets*/
       body: Center(
-        child: exerciseSetList != null && exerciseSetList!.isNotEmpty ? ListView.builder(
+        child: exerciseSetList != null ? ListView.builder(
           padding: const EdgeInsets.only(top: 5),
           itemCount: exerciseSetList?.length,
           itemBuilder: (context, i) {
@@ -103,7 +103,7 @@ class _ExercisePageState extends State<ExercisePage> {
       backgroundColor: const Color(0xFF005EAA),
     );*/
     return Container(
-      height: BaseClass.topBarHeight,
+      height: BaseClass.appBarHeight,
       width: BaseClass.screenWidth,
       decoration: const BoxDecoration(
           color: Color(0xFFF8F8F8),
@@ -162,9 +162,9 @@ class _ExerciseSetItemState extends State<ExerciseSetItem> {
     exerciseSet = widget.workoutPlan.workoutWeekPlan[today]!.exercises[widget.exerciseNum].exerciseSets[widget.exerciseSetNum];
     weightController = TextEditingController(text: exerciseSet.setCurrentWeight.toString());
     repsController = TextEditingController(text: exerciseSet.setCurrentReps.toString());*/
+    exerciseSet = exerciseSetList![widget.exerciseSetNum];
     weightController = TextEditingController(text: exerciseSet.setCurrentWeight.toString());
     repsController = TextEditingController(text: exerciseSet.setCurrentReps.toString());
-    exerciseSet = exerciseSetList![widget.exerciseSetNum];
   }
 
   @override

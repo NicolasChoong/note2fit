@@ -9,15 +9,13 @@ import 'models/WorkoutPlanModel.dart';
 class BaseClass {
   static late double screenHeight;
   static late double screenWidth;
-  static late double topBarHeight;
+  static late double appBarHeight;
 
   static void init(BuildContext context) {
     screenHeight = MediaQuery.of(context).size.height;
     screenWidth = MediaQuery.of(context).size.width;
-    topBarHeight = screenHeight * 0.075;
+    appBarHeight = screenHeight * 0.06;
   }
-
-  static List<String> dayString = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
   static Box box = Hive.box('workout_plan');
 
@@ -65,11 +63,14 @@ class BaseClass {
       legDay,
     ];
 
-    var workoutPlan = WorkoutPlan(0, "Main Workout", DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day), workoutWeekPlan);
-    var workoutPlan2 = WorkoutPlan(1, "Backup Workout", DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day), workoutWeekPlan2);
+    var workoutPlan = WorkoutPlan(0, "Main Workout", DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day), true, workoutWeekPlan);
+    var workoutPlan2 = WorkoutPlan(1, "Backup Workout", DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day), false, workoutWeekPlan2);
 
     await BaseClass.box.clear();
     await BaseClass.box.put(workoutPlan.workoutPlanId, workoutPlan);
     await BaseClass.box.put(workoutPlan2.workoutPlanId, workoutPlan2);
   }
+
+  static bool autoStartWorkout = true;
+  static bool temporarySelectWorkout = false;
 }

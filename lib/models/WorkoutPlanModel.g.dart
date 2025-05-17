@@ -20,14 +20,15 @@ class WorkoutPlanAdapter extends TypeAdapter<WorkoutPlan> {
       fields[0] as int,
       fields[1] as String,
       fields[2] as DateTime,
-      (fields[3] as List).cast<Workout?>(),
+      fields[3] as bool,
+      (fields[4] as List).cast<Workout?>(),
     );
   }
 
   @override
   void write(BinaryWriter writer, WorkoutPlan obj) {
     writer
-      ..writeByte(4)
+      ..writeByte(5)
       ..writeByte(0)
       ..write(obj.workoutPlanId)
       ..writeByte(1)
@@ -35,6 +36,8 @@ class WorkoutPlanAdapter extends TypeAdapter<WorkoutPlan> {
       ..writeByte(2)
       ..write(obj.workoutPlanStartDate)
       ..writeByte(3)
+      ..write(obj.isDefaultWorkoutPlan)
+      ..writeByte(4)
       ..write(obj.workoutPlanDays);
   }
 

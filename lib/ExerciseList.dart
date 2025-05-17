@@ -35,20 +35,20 @@ class _ExerciseListState extends State<ExerciseList> {
 
       final int daysPassed = todayDate.difference(workoutPlan.workoutPlanStartDate).inDays;
       final int todayWorkoutNum = daysPassed % workoutPlan.workoutPlanDays.length;
-      workoutToday = workoutPlan.workoutPlanDays[todayWorkoutNum]!;
+      workoutToday = workoutPlan.workoutPlanDays[todayWorkoutNum];
 
       if (workoutToday != null) {
         /*nameOfWorkoutDay = workoutPlan.workoutPlanDays[todayWorkoutNum]?.workoutDayName;
         exerciseList = workoutPlan.workoutPlanDays[todayWorkoutNum]?.exercises;
         isWorkoutDone = workoutPlan.workoutPlanDays[todayWorkoutNum]?.isWorkoutDone;*/
-        DateTime? lastWorkoutDate = workoutPlan.workoutPlanDays[todayWorkoutNum]?.lastWorkoutDate;
+        exerciseList = workoutToday?.exercises;
 
+        DateTime? lastWorkoutDate = workoutPlan.workoutPlanDays[todayWorkoutNum]?.lastWorkoutDate;
         if (todayDate.isAfter(lastWorkoutDate!)) {
-          debugPrint("Today date $todayDate and last workout date $lastWorkoutDate");
           workoutToday?.lastWorkoutDate = todayDate;
           workoutToday?.isWorkoutDone = false;
 
-          exerciseList = workoutToday?.exercises;
+          debugPrint("Exercise list is ${exerciseList?.length}");
 
           if (exerciseList != null && exerciseList!.isNotEmpty) {
             for (Exercise exercise in exerciseList!) {
@@ -93,7 +93,7 @@ class _ExerciseListState extends State<ExerciseList> {
         children: [
           /*Custom nav bar*/
           Container(
-            height: BaseClass.topBarHeight,
+            height: BaseClass.appBarHeight,
             width: BaseClass.screenWidth,
             decoration: const BoxDecoration(
                 color: Color(0xFFF8F8F8),
@@ -127,7 +127,7 @@ class _ExerciseListState extends State<ExerciseList> {
           /*Exercise list / Rest of the page*/
           Expanded(
               child: workoutToday?.workoutDayName != null
-                  ? (exerciseList != null && exerciseList!.isNotEmpty
+                  ? (exerciseList != null
                       ? ListView.builder(
                           padding: const EdgeInsets.only(top: 5),
                           itemCount: exerciseList!.length,

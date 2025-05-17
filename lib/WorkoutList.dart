@@ -56,29 +56,15 @@ class _WorkoutListState extends State<WorkoutList> {
     super.initState();
   }
 
+
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFEEEEEE),
 
       /*Main App Bar*/
-      appBar: PreferredSize(
-        preferredSize: Size.fromHeight(BaseClass.topBarHeight),
-        child: Container(
-          decoration: const BoxDecoration(
-            boxShadow: [
-              BoxShadow(
-                color: Color(0x4D000000),
-                spreadRadius: 1,
-                blurRadius: 3,
-                offset: Offset(0, 2),
-              ),
-            ],
-          ),
-          /*App bar*/
-          child: appBarDesign(),
-        ),
-      ),
+      appBar: appBarDesign(),
 
       /*Body containing lists of workouts*/
       body: Center(
@@ -98,109 +84,211 @@ class _WorkoutListState extends State<WorkoutList> {
     );
   }
 
-  AppBar appBarDesign() {
-    return AppBar(
-      centerTitle: true,
-      toolbarHeight: BaseClass.topBarHeight,
-      title: const Text(
-        "Workout List",
-        style: TextStyle(
-            color: Colors.white,
-            fontSize: 20,
-            fontWeight: FontWeight.w500
+  // App bar widget
+  PreferredSize appBarDesign() {
+    return PreferredSize(
+      preferredSize: Size.fromHeight(BaseClass.appBarHeight),
+      /* Add shadow effect to app bar */
+      child: Container(
+        decoration: const BoxDecoration(
+          boxShadow: [
+            BoxShadow(
+              color: Color(0x4D000000),
+              spreadRadius: 1,
+              blurRadius: 3,
+              offset: Offset(0, 2),
+            ),
+          ],
+        ),
+        child: AppBar(
+          centerTitle: true,
+          toolbarHeight: BaseClass.appBarHeight,
+          title: const Text(
+            "Workout List",
+            style: TextStyle(
+                color: Colors.white,
+                fontSize: 18,
+                fontWeight: FontWeight.w500
+            ),
+          ),
+          backgroundColor: const Color(0xFF005EAA),
         ),
       ),
-      backgroundColor: const Color(0xFF005EAA),
     );
   }
 
-  Container workoutContainer(WorkoutPlan workoutPlan) {
+  InkWell workoutContainer(WorkoutPlan workoutPlan) {
     double workoutHeight = BaseClass.screenHeight * 0.18;
     double workoutWidth = BaseClass.screenWidth * 0.9;
+
+    final int daysPassed = todayDate.difference(workoutPlan.workoutPlanStartDate).inDays;
+    final int todayWorkoutNum = daysPassed % workoutPlan.workoutPlanDays.length;
+    Workout? todayWorkout = workoutPlan.workoutPlanDays[todayWorkoutNum];
+
+    String todayWorkoutTotalSets() {
+      if (todayWorkout != null) {
+        int totalSets = 0;
+        for (var exercise in todayWorkout.exercises) {
+          totalSets += exercise.exerciseSets.length;
+        }
+        return totalSets.toString();
+      }
+      return "0";
+    }
     
-    return Container(
-      height: workoutHeight,
-      width: workoutWidth,
-      decoration: BoxDecoration(
-        color: const Color(0xFFF8F8F8),
-        borderRadius: BorderRadius.circular(15),
-        border: Border.all(
-            color: const Color(0xFFE0E0E0),
-            style: BorderStyle.solid
-        ),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x1A000000),
-            spreadRadius: 1,
-            blurRadius: 2,
-            offset: Offset(0, 3),
+    return InkWell(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+              builder: (context) =>
+                  ExerciseList(workoutPlanId: workoutPlan.workoutPlanId)),
+        );
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          color: const Color(0xFFF8F8F8),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+              color: workoutPlan.isDefaultWorkoutPlan ? const Color(0xFF005EAA) : const Color(0xFFE0E0E0),
+              style: BorderStyle.solid,
+              width: 1
           ),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(10.0),
+          boxShadow: workoutPlan.isDefaultWorkoutPlan ? const [
+            BoxShadow(
+              color: Color(0x80005EAA),
+              spreadRadius: 0,
+              blurRadius: 5,
+              offset: Offset(0, 0),
+            ),
+          ] : const [
+            BoxShadow(
+              color: Color(0x1A000000),
+              spreadRadius: 0,
+              blurRadius: 2,
+              offset: Offset(0, 2),
+            ),
+          ],
+        ),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Padding(
-              padding:
-              const EdgeInsets.only(left: 10, top: 5, right: 10),
-              child: Row(
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        workoutPlan.workoutPlanName, /*Display workout plan name*/
-                        style: const TextStyle(
+            Column(
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Text(
+                          workoutPlan.workoutPlanName,
+                          style: const TextStyle(
                             color: Color(0xFF313131),
                             fontSize: 20,
-                            fontWeight: FontWeight.bold),
-                      ),
-                    ],
-                  ),
-                  const Spacer(),
-                  IconButton(
-                    onPressed: () {},
-                    icon: SvgPicture.asset('images/more_options.svg'),
-                  )
-                ],
-              ),
-            ),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton( /* Start workout button */
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => ExerciseList(workoutPlanId: workoutPlan.workoutPlanId)),
-                    );
-                  },
-                  style: ButtonStyle(
-                      backgroundColor:
-                      WidgetStateProperty.resolveWith<Color?>(
-                            (Set<WidgetState> states) {
-                          if (states.contains(WidgetState.pressed)) {
-                            return const Color(0x80005EAA);
-                          }
-                          return const Color(
-                              0xFF005EAA); // Use the component's default.
-                        },
-                      ),
-                      shape: const WidgetStatePropertyAll(
-                          RoundedRectangleBorder(
-                              borderRadius: BorderRadius.all(
-                                  Radius.circular(15))))),
-                  child: const Text(
-                    "Start Workout",
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
+                            fontWeight: FontWeight.w600
+                          ),
+                        ),
+                        const Spacer(),
+                        IconButton(
+                          onPressed: () {},
+                          icon: SvgPicture.asset(
+                            'images/edit-icon.svg',
+                            height: 18,
+                          ),
+                        ),
+                        IconButton(
+                          onPressed: () {},
+                          icon: SvgPicture.asset(
+                            'images/back-icon.svg',
+                            height: 18,
+                          ),
+                        )
+                      ],
                     ),
-                  )),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          "Today",
+                          style: TextStyle(
+                            color: Color(0xFF696969),
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600
+                          ),
+                        ),
+                        todayWorkout != null ? Row(
+                          children: [
+                            SvgPicture.asset(
+                              'images/weight-icon.svg',
+                              height: 15,
+                            ),
+                            const SizedBox(
+                              width: 5,
+                            ),
+                            Text(
+                              todayWorkout!.workoutDayName,
+                              style: const TextStyle(
+                                color: Color(0xFF696969),
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500
+                              ),
+                            ),
+                            Container(
+                              width: 1.5, // Line thickness
+                              height: 12, // Line height
+                              color: const Color(0xFFE0E0E0), // Line color
+                              margin: const EdgeInsets.symmetric(horizontal: 8), // Space around the line
+                            ),
+                            Text(
+                              "${todayWorkout.exercises.length.toString()} exercises",
+                              style: const TextStyle(
+                                  color: Color(0xFF696969),
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500
+                              ),
+                            ),
+                            Container(
+                              width: 1.5, // Line thickness
+                              height: 12, // Line height
+                              color: const Color(0xFFE0E0E0), // Line color
+                              margin: const EdgeInsets.symmetric(horizontal: 8), // Space around the line
+                            ),
+                            Text(
+                              "${todayWorkoutTotalSets()} sets",
+                              style: const TextStyle(
+                                  color: Color(0xFF696969),
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500
+                              ),
+                            )
+                          ],
+                        ) : Row(
+                          children: [
+                            SvgPicture.asset(
+                              'images/rest-icon.svg',
+                              height: 15,
+                            ),
+                            const SizedBox(
+                              width: 5,
+                            ),
+                            const Text(
+                              "Rest Day",
+                              style: TextStyle(
+                                  color: Color(0xFF696969),
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500
+                              ),
+                            )
+                          ],
+                        )
+                      ],
+                    )
+                  ],
+                ),
+              ],
+            ),
+            ElevatedButton(
+                onPressed: () {},
+                child: const Text("BRUHAT")
             )
           ],
         ),

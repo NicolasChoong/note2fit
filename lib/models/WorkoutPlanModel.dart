@@ -15,7 +15,10 @@ class WorkoutPlan {
   DateTime workoutPlanStartDate;
 
   @HiveField(3)
+  bool isDefaultWorkoutPlan;
+
+  @HiveField(4)
   List<Workout?> workoutPlanDays;
 
-  WorkoutPlan(this.workoutPlanId, this.workoutPlanName, this.workoutPlanStartDate, this.workoutPlanDays);
+  WorkoutPlan(this.workoutPlanId, this.workoutPlanName, this.workoutPlanStartDate, this.isDefaultWorkoutPlan, this.workoutPlanDays);
 }
