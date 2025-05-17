@@ -31,7 +31,6 @@ Future<void> main() async {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     BaseClass.init(context);
@@ -51,34 +50,28 @@ class WorkoutList extends StatefulWidget {
 }
 
 class _WorkoutListState extends State<WorkoutList> {
-
   @override
   void initState() {
     super.initState();
   }
 
-
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFEEEEEE),
-      /*Main App Bar*/
+
       appBar: appBarDesign(),
-      /*Body containing lists of workouts*/
-      body: Center(
-        child: ListView.builder(
-          padding: const EdgeInsets.only(top: 5),
-          itemCount: BaseClass.box.length,
-          itemBuilder: (context, i) {
-            final WorkoutPlan workoutPlan = BaseClass.box.get(i);
-            return Padding(
-              padding: const EdgeInsets.only(top: 15, left: 20, right: 20),
-              /*Workout container*/
-              child: workoutContainer(workoutPlan),
-            );
-          },
-        ),
+
+      body: ListView.builder(
+        padding: const EdgeInsets.only(top: 5),
+        itemCount: BaseClass.box.length,
+        itemBuilder: (context, i) {
+          final WorkoutPlan workoutPlan = BaseClass.box.get(i);
+          return Padding(
+            padding: const EdgeInsets.only(top: 15, left: 20, right: 20),
+            child: workoutContainer(workoutPlan),
+          );
+        },
       ),
     );
   }
@@ -118,9 +111,6 @@ class _WorkoutListState extends State<WorkoutList> {
 
   /*Workout container widget*/
   InkWell workoutContainer(WorkoutPlan workoutPlan) {
-    double workoutHeight = BaseClass.screenHeight * 0.18;
-    double workoutWidth = BaseClass.screenWidth * 0.9;
-
     final int daysPassed = todayDate.difference(workoutPlan.workoutPlanStartDate).inDays;
     final int todayWorkoutNum = daysPassed % workoutPlan.workoutPlanDays.length;
     Workout? todayWorkout = workoutPlan.workoutPlanDays[todayWorkoutNum];
@@ -149,19 +139,20 @@ class _WorkoutListState extends State<WorkoutList> {
         decoration: BoxDecoration(
           color: const Color(0xFFF8F8F8),
           borderRadius: BorderRadius.circular(10),
+          /*If workout is default, highlight blue, else, gray*/
           border: Border.all(
               color: workoutPlan.isDefaultWorkoutPlan ? const Color(0xFF005EAA) : const Color(0xFFE0E0E0),
               style: BorderStyle.solid,
               width: 1
           ),
-          boxShadow: workoutPlan.isDefaultWorkoutPlan ? const [ /*Highlight default workout in blue*/
+          boxShadow: workoutPlan.isDefaultWorkoutPlan ? const [
             BoxShadow(
               color: Color(0x80005EAA),
               spreadRadius: 0,
               blurRadius: 5,
               offset: Offset(0, 0),
             ),
-          ] : const [ /*Highlight other workout in gray*/
+          ] : const [
             BoxShadow(
               color: Color(0x1A000000),
               spreadRadius: 0,

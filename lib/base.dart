@@ -22,7 +22,7 @@ class BaseClass {
   static Future<void> saveSampleWorkouts() async {
     final sampleSet1 = [
       ExerciseSet(12, 100.0, 9, false),
-      ExerciseSet(12, 95.0, 7, false),
+      ExerciseSet(10, 95.0, 7, false),
       ExerciseSet(12, 90.0, 6, false)
     ];
     final sampleSet2 = [

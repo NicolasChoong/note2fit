@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:intl/intl.dart';
+import 'dart:math' as math;
+import 'package:collection/collection.dart';
 import 'package:note2fit/models/WorkoutPlanModel.dart';
 
 import 'ExercisePage.dart';
@@ -27,6 +28,12 @@ class _ExerciseListState extends State<ExerciseList> {
   late WorkoutPlan workoutPlan;
   Workout? workoutToday;
   List<Exercise>? exerciseList;
+
+  @override
+  void initState() {
+    super.initState();
+    loadData();
+  }
 
   void loadData(){
     setState(() {
@@ -69,191 +76,177 @@ class _ExerciseListState extends State<ExerciseList> {
   Widget build(BuildContext context) {
     BaseClass.init(context);
 
-    loadData();
-
     return Scaffold(
       backgroundColor: const Color(0xFFEEEEEE),
 
-      /*App bar for displaying today's day*/
-      appBar: AppBar(
-        centerTitle: true,
-        toolbarHeight: BaseClass.screenHeight * 0.04,
-        automaticallyImplyLeading: false,
-        backgroundColor: const Color(0xFF005EAA),
-        title: const Text(
-          "DEEZ NUTS",
-          style: TextStyle(
-              color: Colors.white, fontSize: 14, fontWeight: FontWeight.w500),
-        ),
-      ),
+      appBar: appBarDesign(),
 
-      /*1st child of this column body is the custom navbar*/
-      /*2nd child is the exercise list*/
-      body: Column(
-        children: [
-          /*Custom nav bar*/
-          Container(
-            height: BaseClass.appBarHeight,
-            width: BaseClass.screenWidth,
-            decoration: const BoxDecoration(
-                color: Color(0xFFF8F8F8),
-                border: Border(
-                    bottom: BorderSide(color: Color(0xFFE0E0E0), width: 2))),
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                Positioned(
-                  left: 10,
-                  child: IconButton(
-                      onPressed: () {
-                        Navigator.pop(context);
-                      },
-                      icon: SvgPicture.asset(
-                        'images/back.svg',
-                        width: 15,
-                      )),
+      body: workoutToday?.workoutDayName != null
+          ? (exerciseList != null
+          ? ListView.builder(
+          padding: const EdgeInsets.only(top: 5),
+          itemCount: exerciseList!.length,
+          itemBuilder: (context, i) {
+            Exercise? exercise = exerciseList?[i];
+            return Padding(
+              padding: const EdgeInsets.only(top: 15, left: 20, right: 20),
+              child: exerciseContainer(exercise!, context, i),
+            );
+          })
+          : const Center(child: Text("No exercise detected.")))
+          : const Center(child: Text("It's rest day brother, take a good rest!")),
+    );
+  }
+
+  /*App bar widget*/
+  PreferredSize appBarDesign() {
+    return PreferredSize(
+      preferredSize: Size.fromHeight(BaseClass.appBarHeight),
+      /* Add shadow effect to app bar */
+      child: Container(
+        decoration: const BoxDecoration(
+          boxShadow: [
+            BoxShadow(
+              color: Color(0x4D000000),
+              spreadRadius: 1,
+              blurRadius: 3,
+              offset: Offset(0, 2),
+            ),
+          ],
+        ),
+        child: AppBar(
+          centerTitle: true,
+          toolbarHeight: BaseClass.appBarHeight,
+          leading: IconButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              icon: Transform.rotate(
+                angle: math.pi,
+                child: SvgPicture.asset(
+                  'images/back-icon.svg',
+                  height: 14,
                 ),
-                Text(
-                  workoutToday?.workoutDayName ?? "Rest Day",
-                  style: const TextStyle(
-                      color: Color(0xFF262626),
-                      fontSize: 20,
-                      fontWeight: FontWeight.w500),
-                ),
-              ],
+              )),
+          title: const Text(
+            "Workout List",
+            style: TextStyle(
+                color: Color(0xFF262626),
+                fontSize: 18,
+                fontWeight: FontWeight.w500
             ),
           ),
-
-          /*Exercise list / Rest of the page*/
-          Expanded(
-              child: workoutToday?.workoutDayName != null
-                  ? (exerciseList != null
-                      ? ListView.builder(
-                          padding: const EdgeInsets.only(top: 5),
-                          itemCount: exerciseList!.length,
-                          itemBuilder: (context, i) {
-                            Exercise? exercise = exerciseList?[i];
-                            return Padding(
-                              padding: const EdgeInsets.only(
-                                  top: 15, left: 20, right: 20),
-                              /*Body containing lists of exercise*/
-                              child: exerciseContainer(exercise!, context, i),
-                            );
-                          })
-                      : const Center(child: Text("No exercise detected.")))
-                  : const Center(child: Text("It's rest day brother, take a good rest!")))
-        ],
+          backgroundColor: const Color(0xFFF8F8F8),
+        ),
       ),
     );
   }
 
-  Container exerciseContainer(Exercise exercise, BuildContext context, int exerciseNum) {
-    final double exerciseWidth = BaseClass.screenWidth * 0.9;
+  InkWell exerciseContainer(Exercise exercise, BuildContext context, int exerciseNum) {
 
-    return Container(
-      width: exerciseWidth,
-      decoration: BoxDecoration(
-        color: const Color(0xFFF8F8F8),
-        borderRadius: BorderRadius.circular(15),
-        border: Border.all(
-            color: const Color(0xFFE0E0E0), style: BorderStyle.solid),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x1A000000),
-            spreadRadius: 1,
-            blurRadius: 2,
-            offset: Offset(0, 3),
+    String exerciseReps() {
+      List<int> setTargetReps = [];
+      String repsList = "";
+
+      for (var exerciseSet in exercise.exerciseSets) {
+        setTargetReps.add(exerciseSet.setTargetReps);
+      }
+      if (setTargetReps.every((e) => e == setTargetReps.first)) {
+        return setTargetReps.first.toString();
+      } else {
+        for (int i = 0; i < setTargetReps.length; i++) {
+          if (i == 0) {
+            repsList = "${setTargetReps[i]}";
+          } else {
+            repsList = "$repsList, ${setTargetReps[i]}";
+          }
+        }
+        return repsList;
+      }
+    }
+
+    return InkWell(
+      onTap: () async {
+        await Navigator.push(
+          context,
+          MaterialPageRoute(
+              builder: (context) =>
+                  ExercisePage(workoutPlanId: widget.workoutPlanId, exerciseNum: exerciseNum)),
+        );
+        loadData();
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          color: const Color(0xFFF8F8F8),
+          borderRadius: BorderRadius.circular(15),
+          border: Border.all(
+              color: exercise.isExerciseDone ? const Color(0xFF00BF33) : const Color(0xFFE0E0E0),
+              style: BorderStyle.solid,
+              width: 1
           ),
-        ],
-      ),
-      child: Column(
-        children: [
-          Container(
-            width: double.infinity,
-            height: 30,
-            decoration: const BoxDecoration(
-                color: Color(0xFF005EAA),
-                borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(15),
-                    topRight: Radius.circular(15))),
-            child: Center(
-              child: Text(
-                "Exercise ${exerciseNum + 1} IsDone ${exercise.isExerciseDone}",
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                ),
+          boxShadow: exercise.isExerciseDone ? const [
+            BoxShadow(
+              color: Color(0x8000BF33),
+              spreadRadius: 0,
+              blurRadius: 5,
+              offset: Offset(0, 0),
+            ),
+          ] : const [
+            BoxShadow(
+              color: Color(0x1A000000),
+              spreadRadius: 0,
+              blurRadius: 2,
+              offset: Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Padding(
+          padding: const EdgeInsets.only(left: 15, top: 10, right: 15, bottom: 10),
+          child: Column( /*Separate exercise name and sets*/
+            children: [
+              Row(
+                children: [
+                  Text(
+                   "${exerciseNum + 1}. ${exercise.exerciseName}",
+                   style: const TextStyle(
+                       color: Color(0xFF313131),
+                       fontSize: 18,
+                       fontWeight: FontWeight.w500
+                   )
+                  ),
+                  const Spacer(),
+                  exercise.isExerciseDone ? SvgPicture.asset(
+                    'images/view-icon.svg',
+                    height: 20,
+                  ) : SvgPicture.asset(
+                    'images/back-icon.svg',
+                    height: 16,
+                  ),
+                ],
               ),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.only(
-                left: 15, top: 10, right: 15, bottom: 15),
-            child: Row(
-              children: [
-                Expanded(
-                  flex: 2,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        exercise.exerciseName,
-                        style: const TextStyle(
-                            color: Color(0xFF313131),
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600),
-                      ),
-                      Text(
-                        "${exercise.exerciseSets.length.toString()} sets of ${exercise.exerciseSets.map((set) => set.setTargetReps).join(",")}",
-                        style: const TextStyle(
-                            color: Color(0xFF696969),
-                            fontSize: 12,
-                            fontWeight: FontWeight.w400),
-                      )
-                    ],
+              const SizedBox(height: 5),
+              Row(
+                children: [
+                  SvgPicture.asset(
+                    'images/info-icon.svg',
+                    height: 14,
+                    color: const Color(0xFF696969),
                   ),
-                ),
-                Expanded(
-                  flex: 1,
-                  child: Align(
-                    alignment: Alignment.centerRight,
-                    child: FittedBox(
-                      fit: BoxFit.contain,
-                      child: SizedBox(
-                        width: MediaQuery.of(context).size.width * 0.14,
-                        height: MediaQuery.of(context).size.height * 0.045,
-                        child: ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF005EAA),
-                                shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12)),
-                                padding: const EdgeInsets.all(4)),
-                            onPressed: () async {
-                              await Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) =>
-                                        ExercisePage(workoutPlanId: widget.workoutPlanId, exerciseNum: exerciseNum)),
-                              );
-                              loadData();
-                            },
-                            child: const Text(
-                              "Start",
-                              style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w600),
-                            )),
-                      ),
+                  const SizedBox(width: 8),
+                  Text(
+                    "${exercise.exerciseSets.length} sets ${exerciseReps()} reps",
+                    style: const TextStyle(
+                        color: Color(0xFF696969),
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500
                     ),
-                  ),
-                )
-              ],
-            ),
-          )
-        ],
-      )
+                  )
+                ],
+              )
+            ],
+          ),
+        )
+      ),
     );
   }
 }
