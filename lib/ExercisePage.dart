@@ -1,10 +1,15 @@
+import 'dart:io';
+
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:intl/intl.dart';
+import 'dart:math' as math;
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:note2fit/models/ExerciseModel.dart';
 import 'package:note2fit/models/ExerciseSetModel.dart';
 
 import 'base.dart';
+import 'models/WorkoutModel.dart';
 import 'models/WorkoutPlanModel.dart';
 
 //Get today's date for workout date comparison
@@ -16,8 +21,12 @@ late int workoutPlanId;
 late WorkoutPlan workoutPlan;
 
 //Get value from workout plan for this page
+DateTime? lastWorkoutDate;
 Exercise? exercise;
 List<ExerciseSet>? exerciseSetList;
+
+//For UI purposes only
+String nameOfExercise = "";
 
 class ExercisePage extends StatefulWidget {
   const ExercisePage({super.key, required this.workoutPlanId, required this.exerciseNum});
@@ -41,9 +50,9 @@ class _ExercisePageState extends State<ExercisePage> {
     final DateTime startDateOfWorkoutPlan = workoutPlan.workoutPlanStartDate;
     final int daysPassed = todayDate.difference(startDateOfWorkoutPlan).inDays;
     final int todayWorkout = daysPassed % workoutPlan.workoutPlanDays.length;
-    String nameOfExercise = "";
 
-    exercise = workoutPlan.workoutPlanDays[todayWorkout]!.exercises[widget.exerciseNum];
+    lastWorkoutDate = workoutPlan.workoutPlanDays[todayWorkout]?.lastWorkoutDate;
+    exercise = workoutPlan.workoutPlanDays[todayWorkout]?.exercises[widget.exerciseNum];
     if (exercise != null) {
       nameOfExercise = exercise!.exerciseName;
       exerciseSetList = exercise!.exerciseSets;
@@ -51,86 +60,169 @@ class _ExercisePageState extends State<ExercisePage> {
 
     return Scaffold(
       backgroundColor: const Color(0xFFEEEEEE),
-
       /*Main App Bar*/
-      appBar: PreferredSize(
-        preferredSize: Size.fromHeight(BaseClass.appBarHeight),
-        child: Container(
-          decoration: const BoxDecoration(
-            boxShadow: [
-              BoxShadow(
-                color: Color(0x4D000000),
-                spreadRadius: 1,
-                blurRadius: 3,
-                offset: Offset(0, 2),
-              ),
-            ],
-          ),
-          /*App bar*/
-          child: appBarDesign(nameOfExercise),
-        ),
-      ),
-
+      appBar: appBarDesign(),
       /*Body containing a list of sets*/
-      body: Center(
-        child: exerciseSetList != null ? ListView.builder(
-          padding: const EdgeInsets.only(top: 5),
-          itemCount: exerciseSetList?.length,
-          itemBuilder: (context, i) {
-            return Padding(
-              padding: const EdgeInsets.only(top: 15, left: 20, right: 20),
-              /*Workout container*/
-              child: ExerciseSetItem(exerciseSetNum: i),
-            );
-          },
-        ) : const Center(child: Text("No sets detected."))
-      ),
+      body: exerciseSetList != null ? ListView.builder(
+        padding: const EdgeInsets.only(top: 5),
+        itemCount: exerciseSetList?.length,
+        itemBuilder: (context, i) {
+          return Padding(
+            padding: const EdgeInsets.only(top: 15, left: 20, right: 20),
+            /*Workout container*/
+            child: ExerciseSetItem(exerciseSetNum: i),
+          );
+        },
+      ) : const Center(child: Text("No sets detected.")),
     );
   }
 
-  Container appBarDesign(String exerciseName) {
-    /*return AppBar(
-      centerTitle: true,
-      toolbarHeight: BaseClass.topBarHeight,
-      title: Text(
-        exerciseName,
-        style: const TextStyle(
-            color: Colors.white,
-            fontSize: 20,
-            fontWeight: FontWeight.w500
+  /*App bar widget*/
+  PreferredSize appBarDesign() {
+    void confirmationExitDialog(BuildContext context) {
+      showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            if (Platform.isIOS) {
+              return CupertinoAlertDialog(
+                title: const Text(
+                  "Confirm exit?",
+                  style: TextStyle(
+                    color: Color(0xFF262626),
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500
+                  ),
+                ),
+                content: const Text(
+                  "Your progress will not be saved.",
+                  style: TextStyle(
+                      color: Color(0xFF696969),
+                      fontSize: 12
+                  ),
+                ),
+                actions: [
+                  CupertinoDialogAction(
+                    child: const Text(
+                      "Cancel",
+                      style: TextStyle(
+                          color: Color(0xFF696969),
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500
+                      ),
+                    ),
+                    onPressed: () => Navigator.of(context).pop(),
+                  ),
+                  CupertinoDialogAction(
+                    child: const Text(
+                      "Confirm",
+                      style: TextStyle(
+                          color: Color(0xFFFF2121),
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500
+                      ),
+                    ),
+                    onPressed: () {
+                      Navigator.pop(context);
+                      Navigator.pop(context);
+                    },
+                  ),
+                ],
+              );
+            } else {
+              return AlertDialog(
+                titlePadding: EdgeInsets.only(top: 20, right: 20, bottom: 5, left: 20),
+                contentPadding: EdgeInsets.only(top: 0, right: 20, bottom: 5, left: 20),
+                actionsPadding: EdgeInsets.all(5),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10), // Change radius here
+                ),
+                title: const Text(
+                  "Confirm exit?",
+                  style: TextStyle(
+                      color: Color(0xFF262626),
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500
+                  ),
+                ),
+                content: const Text(
+                  "Your progress will not be saved.",
+                  style: TextStyle(
+                      color: Color(0xFF696969),
+                      fontSize: 12
+                  ),
+                ),
+                actions: [
+                  TextButton(
+                    child: const Text(
+                      "Cancel",
+                      style: TextStyle(
+                          color: Color(0xFF696969),
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500
+                      ),
+                    ),
+                    onPressed: () => Navigator.of(context).pop(),
+                  ),
+                  TextButton(
+                    child: const Text(
+                      "Confirm",
+                      style: TextStyle(
+                          color: Color(0xFFFF2121),
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500
+                      ),
+                    ),
+                    onPressed: () {
+                      Navigator.pop(context);
+                      Navigator.pop(context);
+                    },
+                  ),
+                ],
+              );
+            }
+          }
+      );
+    }
+
+    return PreferredSize(
+      preferredSize: Size.fromHeight(BaseClass.appBarHeight),
+      /* Add shadow effect to app bar */
+      child: Container(
+        decoration: const BoxDecoration(
+          boxShadow: [
+            BoxShadow(
+              color: Color(0x4D000000),
+              spreadRadius: 1,
+              blurRadius: 3,
+              offset: Offset(0, 2),
+            ),
+          ],
         ),
-      ),
-      backgroundColor: const Color(0xFF005EAA),
-    );*/
-    return Container(
-      height: BaseClass.appBarHeight,
-      width: BaseClass.screenWidth,
-      decoration: const BoxDecoration(
-          color: Color(0xFFF8F8F8),
-          border: Border(
-              bottom: BorderSide(color: Color(0xFFE0E0E0), width: 2))),
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          Positioned(
-            left: 10,
-            child: IconButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                },
-                icon: SvgPicture.asset(
-                  'images/back.svg',
-                  width: 15,
-                )),
-          ),
-          Text(
-            exerciseName,
+        child: AppBar(
+          centerTitle: true,
+          toolbarHeight: BaseClass.appBarHeight,
+          leading: IconButton(
+              onPressed: () {
+                /*Navigator.pop(context);*/
+                confirmationExitDialog(context);
+              },
+              icon: Transform.rotate(
+                angle: math.pi,
+                child: SvgPicture.asset(
+                  'images/back-icon.svg',
+                  height: 14,
+                ),
+              )),
+          title: Text(
+            nameOfExercise,
             style: const TextStyle(
                 color: Color(0xFF262626),
-                fontSize: 20,
-                fontWeight: FontWeight.w500),
+                fontSize: 18,
+                fontWeight: FontWeight.w500
+            ),
           ),
-        ],
+          backgroundColor: const Color(0xFFF8F8F8),
+        ),
       ),
     );
   }
@@ -154,6 +246,9 @@ class _ExerciseSetItemState extends State<ExerciseSetItem> {
 
   late ExerciseSet exerciseSet;
 
+  String currentWeight = "";
+  String currentReps = "";
+
   @override
   void initState() {
     super.initState();
@@ -163,8 +258,14 @@ class _ExerciseSetItemState extends State<ExerciseSetItem> {
     weightController = TextEditingController(text: exerciseSet.setCurrentWeight.toString());
     repsController = TextEditingController(text: exerciseSet.setCurrentReps.toString());*/
     exerciseSet = exerciseSetList![widget.exerciseSetNum];
-    weightController = TextEditingController(text: exerciseSet.setCurrentWeight.toString());
-    repsController = TextEditingController(text: exerciseSet.setCurrentReps.toString());
+
+    if (exerciseSet.isSetDone) {
+      weightController = TextEditingController(text: exerciseSet.setCurrentWeight.toString());
+      repsController = TextEditingController(text: exerciseSet.setCurrentReps.toString());
+    } else {
+      weightController = TextEditingController(text: "");
+      repsController = TextEditingController(text: "");
+    }
   }
 
   @override
@@ -176,46 +277,330 @@ class _ExerciseSetItemState extends State<ExerciseSetItem> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text("Set ${widget.exerciseSetNum + 1}"),
-        const Text("Weight"),
-        TextField(
-          controller: weightController,
-          keyboardType: TextInputType.number,
-          onChanged: (inputWeight) {
-            exerciseSet.setCurrentWeight = double.tryParse(inputWeight) ?? 0;
-            debugPrint("InputWeight is $inputWeight whereas updated weight now is ${exerciseSet.setCurrentWeight}");
-          },
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8F8F8),
+        borderRadius: BorderRadius.circular(15),
+        border: Border.all(
+            color: exerciseSet.isSetDone ? const Color(0xFF00BF33) : const Color(0xFFE0E0E0),
+            style: BorderStyle.solid,
+            width: 1
         ),
-        Text("Target Reps: ${exerciseSet.setTargetReps}"),
-        TextField(
-          controller: repsController,
-          keyboardType: TextInputType.number,
-          onChanged: (inputReps) {
-            exerciseSet.setCurrentReps = int.tryParse(inputReps) ?? 0;
-            debugPrint("InputWeight is $inputReps whereas updated weight now is ${exerciseSet.setCurrentReps}");
-          },
-        ),
-        Text("Is set done ${exerciseSet.isSetDone}"),
-        ElevatedButton(
-          onPressed: () {
-            setState(() {
-              exerciseSet.isSetDone = !exerciseSet.isSetDone;
-              if (exerciseSetList!.every((x) => x.isSetDone)) {
-                exercise?.isExerciseDone = true;
-              } else {
-                exercise?.isExerciseDone = false;
-              }
-              BaseClass.box.put(workoutPlanId, workoutPlan);
-            });
-            debugPrint("Current weight is ${exerciseSet.setCurrentWeight}\nCurrent reps is ${exerciseSet.setCurrentReps}");
+        boxShadow: exerciseSet.isSetDone ? const [
+          BoxShadow(
+            color: Color(0x8000BF33),
+            spreadRadius: 0,
+            blurRadius: 5,
+            offset: Offset(0, 0),
+          ),
+        ] : const [
+          BoxShadow(
+            color: Color(0x1A000000),
+            spreadRadius: 0,
+            blurRadius: 2,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.only(left: 15, top: 10, right: 15, bottom: 10),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              "Set ${widget.exerciseSetNum + 1}",
+              style: const TextStyle(
+                  color: Color(0xFF313131),
+                  fontSize: 18,
+                  fontWeight: FontWeight.w500
+              ),
+            ),
+            const SizedBox(height: 5),
+            const Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  "Recorded weight and reps",
+                  style: TextStyle(
+                      color: Color(0xFF696969),
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500
+                  )
+                ),
+                Text(
+                  "Target :",
+                  style: TextStyle(
+                      color: Color(0xFF005EAA),
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500
+                  )
+                )
+              ],
+            ),
+            const SizedBox(height: 3),
+            IntrinsicHeight(
+              child: Row(
+                children: [
+                  Row(
+                    children: [
+                      Text(
+                        exerciseSet.setCurrentWeight.toString(),
+                        style: const TextStyle(
+                            color: Color(0xFF262626),
+                            fontSize: 20,
+                            fontWeight: FontWeight.w500
+                        )
+                      ),
+                      const SizedBox(width: 5),
+                      const Text(
+                        "KG",
+                          style: TextStyle(
+                              color: Color(0xFF262626),
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500
+                          )
+                      )
+                    ],
+                  ),
+                  const VerticalDivider(
+                    width: 20,
+                    thickness: 1,
+                    color: Color(0xFFE0E0E0),
+                    indent: 3,
+                    endIndent: 3,
+                  ),
+                  Row(
+                    children: [
+                      Text(
+                        exerciseSet.setCurrentReps.toString(),
+                        style: const TextStyle(
+                            color: Color(0xFF262626),
+                            fontSize: 20,
+                            fontWeight: FontWeight.w500
+                        ),
+                      ),
+                      const SizedBox(width: 5),
+                      const Text(
+                          "reps",
+                          style: TextStyle(
+                              color: Color(0xFF262626),
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500
+                          )
+                      )
+                    ],
+                  ),
+                  const Spacer(),
+                  Row(
+                    children: [
+                      Text(
+                        exerciseSet.setTargetReps.toString(),
+                        style: const TextStyle(
+                            color: Color(0xFF005EAA),
+                            fontSize: 20,
+                            fontWeight: FontWeight.w500
+                        ),
+                      ),
+                      const SizedBox(width: 5),
+                      const Text(
+                          "reps",
+                          style: TextStyle(
+                              color: Color(0xFF005EAA),
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500
+                          )
+                      )
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            exerciseSet.setCurrentReps == exerciseSet.setTargetReps
+                ? const Text(
+                  "You hit your target reps!",
+                  style: TextStyle(
+                      color: Color(0xFF00BF33),
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500
+                  )
+                )
+                : const SizedBox.shrink(),
+            const Divider(
+              height: 20,
+              thickness: 1,
+              color: Color(0xFFE0E0E0),
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  "Enter weight:",
+                  style: TextStyle(
+                      color: Color(0xFF696969),
+                      fontSize: 12
+                  )
+                ),
+                SizedBox(
+                  width: 110,
+                  height: 35,
+                  child: Theme(
+                    data: Theme.of(context).copyWith(
+                      textSelectionTheme: const TextSelectionThemeData(
+                        cursorColor: Color(0xFF005EAA),
+                        selectionColor: Color(0x4D005EAA),
+                        selectionHandleColor: Color(0xFF005EAA),
+                      ),
+                    ),
+                    child: TextField(
+                      controller: weightController,
+                      keyboardType: TextInputType.number,
+                      onChanged: (inputWeight) {
+                        exerciseSet.setCurrentWeight = double.tryParse(inputWeight) ?? exerciseSet.setCurrentWeight;
+                        if (weightController.text != "" && double.parse(weightController.text) > 0 && repsController.text != "" && double.parse(repsController.text) > 0) {
+                          exerciseSet.isSetDone = true;
+                        } else {
+                          exerciseSet.isSetDone = false;
+                        }
+                        debugPrint("InputWeight is $inputWeight whereas updated weight now is ${exerciseSet.setCurrentWeight}");
+                      },
+                      textAlign: TextAlign.left,
+                      textAlignVertical: TextAlignVertical.center,
+                      style: const TextStyle(
+                          color: Color(0xFF262626),
+                          fontSize: 18,
+                      ),
+                      decoration: InputDecoration(
+                        filled: true,
+                        fillColor: const Color(0xFFF8F8F8),
+                        contentPadding: const EdgeInsets.only(left: 10, right: 10),
+                          hintText: "-",
+                          hintStyle: const TextStyle(
+                            color: Color(0xFFAAAAAA),
+                            fontSize: 18,
+                            fontWeight: FontWeight.w400
+                          ),
+                        suffixText: 'KG', // Read-only suffix
+                        suffixStyle: const TextStyle(
+                          color: Color(0xFF262626),
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(5),
+                          borderSide: const BorderSide(
+                            color: Color(0xFF696969),
+                            width: 1,
+                          ),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(5),
+                          borderSide: const BorderSide(
+                            color: Color(0xFF005EAA),
+                            width: 2,
+                          ),
+                        )
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                    "Enter reps:",
+                    style: TextStyle(
+                        color: Color(0xFF696969),
+                        fontSize: 12
+                    )
+                ),
+                SizedBox(
+                  width: 110,
+                  height: 35,
+                  child: Theme(
+                    data: Theme.of(context).copyWith(
+                      textSelectionTheme: const TextSelectionThemeData(
+                        cursorColor: Color(0xFF005EAA),
+                        selectionColor: Color(0x4D005EAA),
+                        selectionHandleColor: Color(0xFF005EAA),
+                      ),
+                    ),
+                    child: TextField(
+                      controller: repsController,
+                      keyboardType: TextInputType.number,
+                      onChanged: (inputReps) {
+                        exerciseSet.setCurrentReps = int.tryParse(inputReps) ?? exerciseSet.setCurrentReps;
+                        if (weightController.text != "" && double.parse(weightController.text) > 0 && repsController.text != "" && double.parse(repsController.text) > 0) {
+                          exerciseSet.isSetDone = true;
+                        } else {
+                          exerciseSet.isSetDone = false;
+                        }
+                        debugPrint("InputWeight is $inputReps whereas updated weight now is ${exerciseSet.setCurrentReps}");
+                      },
+                      textAlign: TextAlign.left,
+                      textAlignVertical: TextAlignVertical.center,
+                      style: const TextStyle(
+                        color: Color(0xFF262626),
+                        fontSize: 18,
+                      ),
+                      decoration: InputDecoration(
+                          filled: true,
+                          fillColor: const Color(0xFFF8F8F8),
+                          contentPadding: const EdgeInsets.only(left: 10, right: 10),
+                          hintText: "-",
+                          hintStyle: const TextStyle(
+                              color: Color(0xFFC4C4C4),
+                              fontSize: 18,
+                              fontWeight: FontWeight.w400
+                          ),
+                          suffixText: 'reps', // Read-only suffix
+                          suffixStyle: const TextStyle(
+                              color: Color(0xFF262626),
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(5),
+                            borderSide: const BorderSide(
+                              color: Color(0xFF696969),
+                              width: 1,
+                            ),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(5),
+                            borderSide: const BorderSide(
+                              color: Color(0xFF005EAA),
+                              width: 2,
+                            ),
+                          )
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            /*Text("Is set done ${exerciseSet.isSetDone}"),*/
+            /*ElevatedButton(
+              onPressed: () {
+                setState(() {
+                  exerciseSet.isSetDone = !exerciseSet.isSetDone;
+                  if (exerciseSetList!.every((x) => x.isSetDone)) {
+                    exercise?.isExerciseDone = true;
+                  } else {
+                    exercise?.isExerciseDone = false;
+                  }
+                  BaseClass.box.put(workoutPlanId, workoutPlan);
+                });
+                debugPrint("Current weight is ${exerciseSet.setCurrentWeight}\nCurrent reps is ${exerciseSet.setCurrentReps}");
 
-          },
-          child: !exerciseSet.isSetDone ? const Text("Finish and Save Set") : const Text("Edit Set"),
-        )
-      ],
+              },
+              child: !exerciseSet.isSetDone ? const Text("Finish and Save Set") : const Text("Edit Set"),
+            )*/
+          ],
+        ),
+      ),
     );
   }
 }

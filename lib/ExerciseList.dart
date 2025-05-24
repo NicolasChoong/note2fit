@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'dart:math' as math;
-import 'package:collection/collection.dart';
 import 'package:note2fit/models/WorkoutPlanModel.dart';
 
 import 'ExercisePage.dart';
@@ -128,8 +127,15 @@ class _ExerciseListState extends State<ExerciseList> {
                   height: 14,
                 ),
               )),
-          title: const Text(
+          title: workoutToday?.workoutDayName != null ? const Text(
             "Workout List",
+            style: TextStyle(
+                color: Color(0xFF262626),
+                fontSize: 18,
+                fontWeight: FontWeight.w500
+            ),
+          ) : const Text(
+            "Rest Day",
             style: TextStyle(
                 color: Color(0xFF262626),
                 fontSize: 18,
