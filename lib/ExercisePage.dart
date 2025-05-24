@@ -79,109 +79,9 @@ class _ExercisePageState extends State<ExercisePage> {
 
   /*App bar widget*/
   PreferredSize appBarDesign() {
-    void confirmationExitDialog(BuildContext context) {
-      showDialog(
-          context: context,
-          builder: (BuildContext context) {
-            if (Platform.isIOS) {
-              return CupertinoAlertDialog(
-                title: const Text(
-                  "Confirm exit?",
-                  style: TextStyle(
-                    color: Color(0xFF262626),
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500
-                  ),
-                ),
-                content: const Text(
-                  "Your progress will not be saved.",
-                  style: TextStyle(
-                      color: Color(0xFF696969),
-                      fontSize: 12
-                  ),
-                ),
-                actions: [
-                  CupertinoDialogAction(
-                    child: const Text(
-                      "Cancel",
-                      style: TextStyle(
-                          color: Color(0xFF696969),
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500
-                      ),
-                    ),
-                    onPressed: () => Navigator.of(context).pop(),
-                  ),
-                  CupertinoDialogAction(
-                    child: const Text(
-                      "Confirm",
-                      style: TextStyle(
-                          color: Color(0xFFFF2121),
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500
-                      ),
-                    ),
-                    onPressed: () {
-                      Navigator.pop(context);
-                      Navigator.pop(context);
-                    },
-                  ),
-                ],
-              );
-            } else {
-              return AlertDialog(
-                titlePadding: EdgeInsets.only(top: 20, right: 20, bottom: 5, left: 20),
-                contentPadding: EdgeInsets.only(top: 0, right: 20, bottom: 5, left: 20),
-                actionsPadding: EdgeInsets.all(5),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10), // Change radius here
-                ),
-                title: const Text(
-                  "Confirm exit?",
-                  style: TextStyle(
-                      color: Color(0xFF262626),
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500
-                  ),
-                ),
-                content: const Text(
-                  "Your progress will not be saved.",
-                  style: TextStyle(
-                      color: Color(0xFF696969),
-                      fontSize: 12
-                  ),
-                ),
-                actions: [
-                  TextButton(
-                    child: const Text(
-                      "Cancel",
-                      style: TextStyle(
-                          color: Color(0xFF696969),
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500
-                      ),
-                    ),
-                    onPressed: () => Navigator.of(context).pop(),
-                  ),
-                  TextButton(
-                    child: const Text(
-                      "Confirm",
-                      style: TextStyle(
-                          color: Color(0xFFFF2121),
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500
-                      ),
-                    ),
-                    onPressed: () {
-                      Navigator.pop(context);
-                      Navigator.pop(context);
-                    },
-                  ),
-                ],
-              );
-            }
-          }
-      );
+    Future<void> saveAndExit(BuildContext context) async {
+      await BaseClass.box.put(workoutPlanId, workoutPlan);
+      Navigator.pop(context);
     }
 
     return PreferredSize(
@@ -204,7 +104,7 @@ class _ExercisePageState extends State<ExercisePage> {
           leading: IconButton(
               onPressed: () {
                 /*Navigator.pop(context);*/
-                confirmationExitDialog(context);
+                saveAndExit(context);
               },
               icon: Transform.rotate(
                 angle: math.pi,
