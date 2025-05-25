@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/adapters.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:note2fit/SettingsPage.dart';
 import 'dart:math' as math;
 import 'package:note2fit/models/WorkoutPlanModel.dart';
 
@@ -22,6 +23,7 @@ Future<void> main() async {
   Hive.registerAdapter(WorkoutPlanAdapter());
 
   await Hive.openBox('workout_plan');
+  await Hive.openBox('settings');
 
   await BaseClass.saveSampleWorkouts();
 
@@ -53,6 +55,22 @@ class _WorkoutListState extends State<WorkoutList> {
   @override
   void initState() {
     super.initState();
+
+    WidgetsBinding.instance.addPostFrameCallback((callback) {
+      if (BaseClass.settingsBox.get("autoStartWorkout", defaultValue: false)) {
+        for (int i = 0; i < BaseClass.box.length; i++) {
+          final WorkoutPlan workoutPlan = BaseClass.box.get(i);
+          if (workoutPlan.isDefaultWorkoutPlan) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (context) =>
+                      ExerciseList(workoutPlanId: workoutPlan.workoutPlanId)),
+            );
+          }
+        }
+      }
+    });
   }
 
   @override
@@ -104,6 +122,23 @@ class _WorkoutListState extends State<WorkoutList> {
             ),
           ),
           backgroundColor: const Color(0xFF005EAA),
+          actions: [
+            IconButton(
+              icon: SvgPicture.asset(
+                "images/settings-icon.svg",
+                width: 20,
+              ),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) =>
+                          const SettingsPage()),
+                );
+              },
+            ),
+            // You can add more widgets here if you like!
+          ]
         ),
       ),
     );

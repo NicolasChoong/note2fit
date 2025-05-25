@@ -18,6 +18,7 @@ class BaseClass {
   }
 
   static Box box = Hive.box('workout_plan');
+  static Box settingsBox = Hive.box('settings');
 
   static Future<void> saveSampleWorkouts() async {
     final sampleSet1 = [
