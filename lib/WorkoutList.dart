@@ -9,6 +9,7 @@ import 'package:note2fit/models/WorkoutPlanModel.dart';
 import 'ExerciseList.dart';
 import 'base.dart';
 import 'models/ExerciseModel.dart';
+import 'models/ExercisePlanModel.dart';
 import 'models/ExerciseSetModel.dart';
 import 'models/WorkoutModel.dart';
 
@@ -17,10 +18,11 @@ Future<void> main() async {
 
   await Hive.initFlutter();
 
-  Hive.registerAdapter(ExerciseSetAdapter());
-  Hive.registerAdapter(ExerciseAdapter());
-  Hive.registerAdapter(WorkoutAdapter());
   Hive.registerAdapter(WorkoutPlanAdapter());
+  Hive.registerAdapter(WorkoutAdapter());
+  Hive.registerAdapter(ExercisePlanAdapter());
+  Hive.registerAdapter(ExerciseAdapter());
+  Hive.registerAdapter(ExerciseSetAdapter());
 
   await Hive.openBox('workout_plan');
   await Hive.openBox('settings');
@@ -153,8 +155,10 @@ class _WorkoutListState extends State<WorkoutList> {
     String todayWorkoutTotalSets() {
       if (todayWorkout != null) {
         int totalSets = 0;
-        for (var exercise in todayWorkout.exercises) {
-          totalSets += exercise.exerciseSets.length;
+        for (var exercisePlan in todayWorkout.exercisePlans) {
+          for (var exercise in exercisePlan.exercises) {
+            totalSets += exercise.exerciseSets.length;
+          }
         }
         return totalSets.toString();
       }
@@ -260,7 +264,7 @@ class _WorkoutListState extends State<WorkoutList> {
                             margin: const EdgeInsets.symmetric(horizontal: 8),
                           ),
                           Text(
-                            "${todayWorkout.exercises.length.toString()} exercises",
+                            "${todayWorkout.totalExercise} exercises",
                             style: const TextStyle(
                                 color: Color(0xFF696969),
                                 fontSize: 12,

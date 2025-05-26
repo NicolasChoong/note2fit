@@ -8,7 +8,7 @@ part of 'WorkoutPlanModel.dart';
 
 class WorkoutPlanAdapter extends TypeAdapter<WorkoutPlan> {
   @override
-  final int typeId = 3;
+  final int typeId = 0;
 
   @override
   WorkoutPlan read(BinaryReader reader) {

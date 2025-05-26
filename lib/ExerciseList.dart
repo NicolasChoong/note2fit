@@ -6,6 +6,7 @@ import 'package:note2fit/models/WorkoutPlanModel.dart';
 import 'ExercisePage.dart';
 import 'base.dart';
 import 'models/ExerciseModel.dart';
+import 'models/ExercisePlanModel.dart';
 import 'models/ExerciseSetModel.dart';
 import 'models/WorkoutModel.dart';
 
@@ -26,7 +27,8 @@ class _ExerciseListState extends State<ExerciseList> {
   late int workoutPlanId;
   late WorkoutPlan workoutPlan;
   Workout? workoutToday;
-  List<Exercise>? exerciseList;
+  List<ExercisePlan>? exercisePlanList;
+  List<Exercise>? exercise;
 
   @override
   void initState() {
@@ -47,20 +49,18 @@ class _ExerciseListState extends State<ExerciseList> {
         /*nameOfWorkoutDay = workoutPlan.workoutPlanDays[todayWorkoutNum]?.workoutDayName;
         exerciseList = workoutPlan.workoutPlanDays[todayWorkoutNum]?.exercises;
         isWorkoutDone = workoutPlan.workoutPlanDays[todayWorkoutNum]?.isWorkoutDone;*/
-        exerciseList = workoutToday?.exercises;
+        exercisePlanList = workoutToday?.exercisePlans;
 
         DateTime? lastWorkoutDate = workoutPlan.workoutPlanDays[todayWorkoutNum]?.lastWorkoutDate;
         if (todayDate.isAfter(lastWorkoutDate!)) {
           workoutToday?.lastWorkoutDate = todayDate;
-          workoutToday?.isWorkoutDone = false;
 
-          debugPrint("Exercise list is ${exerciseList?.length}");
-
-          if (exerciseList != null && exerciseList!.isNotEmpty) {
-            for (Exercise exercise in exerciseList!) {
-              exercise.isExerciseDone = false;
-              for (ExerciseSet exerciseSet in exercise.exerciseSets) {
-                exerciseSet.isSetDone = false;
+          if (exercisePlanList != null && exercisePlanList!.isNotEmpty) {
+            for (ExercisePlan exercisePlan in exercisePlanList!) {
+              for (Exercise exercise in exercisePlan.exercises) {
+                for (ExerciseSet exerciseSet in exercise.exerciseSets) {
+                  exerciseSet.isSetDone = false;
+                }
               }
             }
           }
@@ -75,21 +75,24 @@ class _ExerciseListState extends State<ExerciseList> {
   Widget build(BuildContext context) {
     BaseClass.init(context);
 
+    debugPrint("EXERCISE PLAN LIST LENGTH ${exercisePlanList?.length}");
+
     return Scaffold(
       backgroundColor: const Color(0xFFEEEEEE),
 
       appBar: appBarDesign(),
 
       body: workoutToday?.workoutDayName != null
-          ? (exerciseList != null
+          ? (exercisePlanList != null
           ? ListView.builder(
           padding: const EdgeInsets.only(top: 5),
-          itemCount: exerciseList!.length,
+          itemCount: exercisePlanList!.length,
           itemBuilder: (context, i) {
-            Exercise? exercise = exerciseList?[i];
+            ExercisePlan? exercisePlan = exercisePlanList?[i];
+            debugPrint("EXERCISE PLAN NAME ${exercisePlan?.exercisePlanName}");
             return Padding(
               padding: const EdgeInsets.only(top: 15, left: 20, right: 20),
-              child: exerciseContainer(exercise!, context, i),
+              child: exercisePlanContainer(exercisePlan!, context, i),
             );
           })
           : const Center(child: Text("No exercise detected.")))
@@ -148,27 +151,27 @@ class _ExerciseListState extends State<ExerciseList> {
     );
   }
 
-  InkWell exerciseContainer(Exercise exercise, BuildContext context, int exerciseNum) {
+  InkWell exercisePlanContainer(ExercisePlan exercisePlan, BuildContext context, int exercisePlanNum) {
 
-    String exerciseReps() {
+    String getTotalSetsAndReps(Exercise exercise) {
+      String totalSets = "";
       List<int> setTargetReps = [];
       String repsList = "";
 
-      for (var exerciseSet in exercise.exerciseSets) {
-        setTargetReps.add(exerciseSet.setTargetReps);
-      }
-      if (setTargetReps.every((e) => e == setTargetReps.first)) {
-        return setTargetReps.first.toString();
+      totalSets = exercise.exerciseSets.length.toString();
+
+      setTargetReps.addAll(exercise.exerciseSets.map((e) => e.setTargetReps));
+      if (setTargetReps.length == 1) {
+        repsList = setTargetReps[0].toString();
       } else {
-        for (int i = 0; i < setTargetReps.length; i++) {
-          if (i == 0) {
-            repsList = "${setTargetReps[i]}";
-          } else {
-            repsList = "$repsList, ${setTargetReps[i]}";
-          }
+        if (setTargetReps.every((e) => e == setTargetReps.first)) {
+          repsList = setTargetReps.first.toString();
+        } else {
+          repsList = setTargetReps.join(', ');
         }
-        return repsList;
       }
+
+      return "$totalSets sets and $repsList reps";
     }
 
     return InkWell(
@@ -177,7 +180,7 @@ class _ExerciseListState extends State<ExerciseList> {
           context,
           MaterialPageRoute(
               builder: (context) =>
-                  ExercisePage(workoutPlanId: widget.workoutPlanId, exerciseNum: exerciseNum)),
+                  ExercisePage(workoutPlanId: widget.workoutPlanId, exercisePlanNum: exercisePlanNum)),
         );
         loadData();
       },
@@ -186,11 +189,11 @@ class _ExerciseListState extends State<ExerciseList> {
           color: const Color(0xFFF8F8F8),
           borderRadius: BorderRadius.circular(15),
           border: Border.all(
-              color: exercise.isExerciseDone ? const Color(0xFF00BF33) : const Color(0xFFE0E0E0),
+              color: exercisePlan.isExercisePlanDone ? const Color(0xFF00BF33) : const Color(0xFFE0E0E0),
               style: BorderStyle.solid,
               width: 1
           ),
-          boxShadow: exercise.isExerciseDone ? const [
+          boxShadow: exercisePlan.isExercisePlanDone ? const [
             BoxShadow(
               color: Color(0x8000BF33),
               spreadRadius: 0,
@@ -213,7 +216,7 @@ class _ExerciseListState extends State<ExerciseList> {
               Row(
                 children: [
                   Text(
-                   "${exerciseNum + 1}. ${exercise.exerciseName}",
+                   "${exercisePlanNum + 1}. ${exercisePlan.exercisePlanName}",
                    style: const TextStyle(
                        color: Color(0xFF313131),
                        fontSize: 18,
@@ -221,7 +224,7 @@ class _ExerciseListState extends State<ExerciseList> {
                    )
                   ),
                   const Spacer(),
-                  exercise.isExerciseDone ? SvgPicture.asset(
+                  exercisePlan.isExercisePlanDone ? SvgPicture.asset(
                     'images/view-icon.svg',
                     height: 20,
                   ) : SvgPicture.asset(
@@ -232,21 +235,38 @@ class _ExerciseListState extends State<ExerciseList> {
               ),
               const SizedBox(height: 5),
               Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  SvgPicture.asset(
-                    'images/info-icon.svg',
-                    height: 14,
-                    color: const Color(0xFF696969),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 2),
+                    child: SvgPicture.asset(
+                      'images/info-icon.svg',
+                      height: 14,
+                      color: const Color(0xFF696969),
+                    ),
                   ),
                   const SizedBox(width: 8),
-                  Text(
-                    "${exercise.exerciseSets.length} sets ${exerciseReps()} reps",
+                  Column(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: exercisePlan.exercises.map((exercise) {
+                      return Text(
+                        getTotalSetsAndReps(exercise),
+                        style: const TextStyle(
+                          color: Color(0xFF696969),
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      );
+                    }).toList()),
+                  /*Text(
+                    "${exercisePlan.totalSets} sets ${exerciseReps()} reps",
                     style: const TextStyle(
                         color: Color(0xFF696969),
                         fontSize: 12,
                         fontWeight: FontWeight.w500
                     ),
-                  )
+                  )*/
                 ],
               )
             ],

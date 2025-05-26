@@ -8,7 +8,7 @@ part of 'WorkoutModel.dart';
 
 class WorkoutAdapter extends TypeAdapter<Workout> {
   @override
-  final int typeId = 2;
+  final int typeId = 1;
 
   @override
   Workout read(BinaryReader reader) {
@@ -18,23 +18,20 @@ class WorkoutAdapter extends TypeAdapter<Workout> {
     };
     return Workout(
       fields[0] as String,
-      (fields[1] as List).cast<Exercise>(),
-      fields[2] as bool,
-      fields[3] as DateTime,
+      (fields[1] as List).cast<ExercisePlan>(),
+      fields[2] as DateTime,
     );
   }
 
   @override
   void write(BinaryWriter writer, Workout obj) {
     writer
-      ..writeByte(4)
+      ..writeByte(3)
       ..writeByte(0)
       ..write(obj.workoutDayName)
       ..writeByte(1)
-      ..write(obj.exercises)
+      ..write(obj.exercisePlans)
       ..writeByte(2)
-      ..write(obj.isWorkoutDone)
-      ..writeByte(3)
       ..write(obj.lastWorkoutDate);
   }
 

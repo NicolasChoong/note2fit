@@ -3,7 +3,7 @@ import 'WorkoutModel.dart';
 
 part 'WorkoutPlanModel.g.dart';
 
-@HiveType(typeId: 3)
+@HiveType(typeId: 0)
 class WorkoutPlan {
   @HiveField(0)
   int workoutPlanId;

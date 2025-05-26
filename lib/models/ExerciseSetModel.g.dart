@@ -8,7 +8,7 @@ part of 'ExerciseSetModel.dart';
 
 class ExerciseSetAdapter extends TypeAdapter<ExerciseSet> {
   @override
-  final int typeId = 0;
+  final int typeId = 4;
 
   @override
   ExerciseSet read(BinaryReader reader) {

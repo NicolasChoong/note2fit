@@ -1,23 +1,27 @@
 import 'package:hive/hive.dart';
 import 'ExerciseModel.dart';
+import 'ExercisePlanModel.dart';
 
 part 'WorkoutModel.g.dart';
 
-@HiveType(typeId: 2)
+@HiveType(typeId: 1)
 class Workout {
   @HiveField(0)
   String workoutDayName;
 
   @HiveField(1)
-  List<Exercise> exercises;
+  List<ExercisePlan> exercisePlans;
 
   @HiveField(2)
-  bool isWorkoutDone = false;
-
-  @HiveField(3)
   DateTime lastWorkoutDate;
 
-  Workout(this.workoutDayName, this.exercises, this.isWorkoutDone, this.lastWorkoutDate);
+  bool get isWorkoutDone => exercisePlans.every((e) => e.isExercisePlanDone);
+  
+  int get totalExercise => exercisePlans
+                          .map((exercisePlan) => exercisePlan.exercises.length)
+                          .fold(0, (previousValue, currentValue) => previousValue + currentValue);
+
+  Workout(this.workoutDayName, this.exercisePlans, this.lastWorkoutDate);
 }
 
 /*

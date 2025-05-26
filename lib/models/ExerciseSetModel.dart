@@ -2,7 +2,7 @@ import 'package:hive/hive.dart';
 
 part 'ExerciseSetModel.g.dart';
 
-@HiveType(typeId: 0)
+@HiveType(typeId: 4)
 class ExerciseSet {
   @HiveField(0)
   int setTargetReps;

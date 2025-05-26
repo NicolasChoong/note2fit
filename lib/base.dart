@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:hive/hive.dart';
+import 'package:note2fit/models/ExercisePlanModel.dart';
 
 import 'models/ExerciseModel.dart';
 import 'models/ExerciseSetModel.dart';
@@ -21,28 +22,69 @@ class BaseClass {
   static Box settingsBox = Hive.box('settings');
 
   static Future<void> saveSampleWorkouts() async {
-    final sampleSet1 = [
+
+    var sampleSet1 = [
       ExerciseSet(12, 100.0, 9, false),
       ExerciseSet(10, 95.0, 7, false),
       ExerciseSet(12, 90.0, 6, false)
     ];
-    final sampleSet2 = [
-      ExerciseSet(12, 80.0, 8, false),
-      ExerciseSet(12, 75.0, 5, false)
+    var sampleExercise1 = [
+      Exercise("Bench Press", sampleSet1)
     ];
 
-    final sampleExerciseList1 = [
-      Exercise("Bench Press", sampleSet1, false),
-      Exercise("Barbell Row", sampleSet2, false)
+    var sampleSet2 = [
+      ExerciseSet(12, 80.0, 5, false),
+      ExerciseSet(12, 75.0, 4, false)
+    ];
+    var sampleExercise2 = [
+      Exercise("Barbell Row", sampleSet2)
     ];
 
-    final sampleExerciseList2 = [
-      Exercise("Squats", sampleSet2, false),
-      Exercise("RDL", sampleSet1, false)
+    var sampleSet3 = [
+      ExerciseSet(12, 140.0, 8, false),
+      ExerciseSet(12, 135.0, 7, false)
+    ];
+    var sampleExercise3 = [
+      Exercise("Squats", sampleSet3)
     ];
 
-    final chestDay = Workout("Chest Day", sampleExerciseList1, false, DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day));
-    final legDay = Workout("Leg Day", sampleExerciseList2, false, DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day));
+    var sampleSet4 = [
+      ExerciseSet(12, 180.0, 10, false),
+      ExerciseSet(12, 165.0, 11, false)
+    ];
+    var sampleExercise4 = [
+      Exercise("RDL", sampleSet4)
+    ];
+
+    var sampleSet5 = [
+      ExerciseSet(12, 50.0, 7, false),
+      ExerciseSet(12, 45.0, 5, false),
+      ExerciseSet(12, 40.0, 4, false)
+    ];
+    var sampleSet6 = [
+      ExerciseSet(12, 30.0, 6, false),
+      ExerciseSet(12, 25.0, 6, false),
+      ExerciseSet(12, 22.5, 4, false)
+    ];
+    var sampleExercise5 = [
+      Exercise("Tricep Extension", sampleSet5),
+      Exercise("Bicep Curls", sampleSet6)
+    ];
+
+    var sampleExercisePlan1 = [
+      ExercisePlan(sampleExercise1.map((e) => e.exerciseName).join(" + "), sampleExercise1),
+      ExercisePlan(sampleExercise2.map((e) => e.exerciseName).join(" + "), sampleExercise2),
+      ExercisePlan(sampleExercise5.map((e) => e.exerciseName).join(" + "), sampleExercise5)
+    ];
+
+    var sampleExercisePlan2 = [
+      ExercisePlan(sampleExercise3.map((e) => e.exerciseName).join(" + "), sampleExercise3),
+      ExercisePlan(sampleExercise4.map((e) => e.exerciseName).join(" + "), sampleExercise4),
+      ExercisePlan(sampleExercise5.map((e) => e.exerciseName).join(" + "), sampleExercise5)
+    ];
+
+    final chestDay = Workout("Chest Day", sampleExercisePlan1, DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day));
+    final legDay = Workout("Leg Day", sampleExercisePlan2, DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day));
 
     var workoutWeekPlan = [
       chestDay,
