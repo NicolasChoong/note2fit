@@ -59,16 +59,22 @@ class BaseClass {
     var sampleSet5 = [
       ExerciseSet(12, 50.0, 7, false),
       ExerciseSet(12, 45.0, 5, false),
+      ExerciseSet(12, 40.0, 4, false),
       ExerciseSet(12, 40.0, 4, false)
     ];
     var sampleSet6 = [
-      ExerciseSet(12, 30.0, 6, false),
       ExerciseSet(12, 25.0, 6, false),
-      ExerciseSet(12, 22.5, 4, false)
+      ExerciseSet(12, 30.0, 6, false),
+      ExerciseSet(12, 25.0, 6, false)
+    ];
+    var sampleSet7 = [
+      ExerciseSet(12, 30.0, 6, false),
+      ExerciseSet(12, 25.0, 6, false)
     ];
     var sampleExercise5 = [
       Exercise("Tricep Extension", sampleSet5),
-      Exercise("Bicep Curls", sampleSet6)
+      Exercise("Bicep Curls", sampleSet6),
+      Exercise("Rear Delts", sampleSet7)
     ];
 
     var sampleExercisePlan1 = [

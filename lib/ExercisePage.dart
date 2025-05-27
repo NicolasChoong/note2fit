@@ -31,6 +31,7 @@ String nameOfExercisePlan = "";
 
 //Test
 int nextSetIndex = 0;
+int nextExerciseSetLength = 0;
 
 class ExercisePage extends StatefulWidget {
   const ExercisePage({super.key, required this.workoutPlanId, required this.exercisePlanNum});
@@ -65,10 +66,20 @@ class _ExercisePageState extends State<ExercisePage> {
     int getTotalListLength() {
       int setCount = 0;
       if (exerciseList != null) {
-        setCount = exerciseList!
+        /*setCount = exerciseList!
                     .map((exercise) => exercise.exerciseSets.length)
-                    .fold(0, (previousValue, currentValue) => previousValue + currentValue);
+                    .fold(0, (previousValue, currentValue) => previousValue + currentValue);*/
+        for (var exercise in exerciseList!) {
+          if (setCount == 0) {
+            setCount += exercise.exerciseSets.length;
+          } else {
+            setCount *= exercise.exerciseSets.length;
+          }
+        }
       }
+
+      debugPrint("GET TOTAL LIST LENGTH IS $setCount");
+
       return setCount;
     }
 
@@ -77,21 +88,24 @@ class _ExercisePageState extends State<ExercisePage> {
       /*Main App Bar*/
       appBar: appBarDesign(),
       /*Body containing a list of sets*/
-      body: exerciseList != null ? ListView.builder(
-        padding: const EdgeInsets.only(top: 5),
-        itemCount: getTotalListLength(),
-        itemBuilder: (context, i) {
-          final setIndex = i ~/ exerciseList!.length; // 0,1,2...
-          final exerciseIndex = i % exerciseList!.length; // 0,1,...
+      body: exerciseList != null ? Padding(
+        padding: const EdgeInsets.only(top: 15),
+        child: ListView.builder(
+          padding: const EdgeInsets.only(top: 5),
+          itemCount: getTotalListLength(),
+          itemBuilder: (context, i) {
+            final setIndex = i ~/ exerciseList!.length; // 0,1,2...
+            final exerciseIndex = i % exerciseList!.length; // 0,1,...
 
-          nextSetIndex = (i + 1) ~/ exerciseList!.length;
+            nextSetIndex = (i + 1) ~/ exerciseList!.length;
 
-          return Padding(
-            padding: const EdgeInsets.only(top: 15, left: 20, right: 20),
-            /*Workout container*/
-            child: ExerciseSetContainer(exerciseIndex: exerciseIndex, exerciseSetIndex: setIndex,),
-          );
-        },
+            return Padding(
+              padding: const EdgeInsets.only(left: 20, right: 20),
+              /*Workout container*/
+              child: ExerciseSetContainer(exerciseIndex: exerciseIndex, exerciseSetIndex: setIndex,),
+            );
+          },
+        ),
       ) : const Center(child: Text("No exercises detected.")),
     );
   }
@@ -166,7 +180,7 @@ class _ExerciseSetContainerState extends State<ExerciseSetContainer> {
   late TextEditingController repsController;
 
   late Exercise exercise;
-  late ExerciseSet exerciseSet;
+  ExerciseSet? exerciseSet;
 
   String currentWeight = "";
   String currentReps = "";
@@ -183,11 +197,23 @@ class _ExerciseSetContainerState extends State<ExerciseSetContainer> {
     debugPrint("Building Set Item for ${widget.exerciseIndex} and ${widget.exerciseSetIndex}");
 
     exercise = exerciseList![widget.exerciseIndex];
-    exerciseSet = exercise.exerciseSets[widget.exerciseSetIndex];
 
-    if (exerciseSet.isSetDone) {
-      weightController = TextEditingController(text: exerciseSet.setCurrentWeight.toString());
-      repsController = TextEditingController(text: exerciseSet.setCurrentReps.toString());
+    if ((widget.exerciseIndex + 1) < exerciseList!.length) {
+      nextExerciseSetLength = exerciseList![widget.exerciseIndex + 1].exerciseSets.length;
+    }
+
+    if ((exercise.exerciseSets.length - 1) >= widget.exerciseSetIndex) {
+      exerciseSet = exercise.exerciseSets[widget.exerciseSetIndex];
+    }
+
+    if (exerciseSet != null) {
+      if (exerciseSet!.isSetDone) {
+        weightController = TextEditingController(text: exerciseSet!.setCurrentWeight.toString());
+        repsController = TextEditingController(text: exerciseSet!.setCurrentReps.toString());
+      } else {
+        weightController = TextEditingController(text: "");
+        repsController = TextEditingController(text: "");
+      }
     } else {
       weightController = TextEditingController(text: "");
       repsController = TextEditingController(text: "");
@@ -203,633 +229,373 @@ class _ExerciseSetContainerState extends State<ExerciseSetContainer> {
 
   @override
   Widget build(BuildContext context) {
-    if (nextSetIndex == widget.exerciseSetIndex) {
-      return Column(
-        children: [
-          Container(
-            decoration: BoxDecoration(
-              color: const Color(0xFFF8F8F8),
-              borderRadius: BorderRadius.circular(15),
-              border: Border.all(
-                  color: exerciseSet.isSetDone ? const Color(0xFF00BF33) : const Color(0xFFE0E0E0),
-                  style: BorderStyle.solid,
-                  width: 1
-              ),
-              boxShadow: exerciseSet.isSetDone ? const [
-                BoxShadow(
-                  color: Color(0x8000BF33),
-                  spreadRadius: 0,
-                  blurRadius: 5,
-                  offset: Offset(0, 0),
-                ),
-              ] : const [
-                BoxShadow(
-                  color: Color(0x1A000000),
-                  spreadRadius: 0,
-                  blurRadius: 2,
-                  offset: Offset(0, 2),
-                ),
-              ],
+    return exerciseSet != null
+      ? Column(
+      children: [
+        Container(
+          decoration: BoxDecoration(
+            color: const Color(0xFFF8F8F8),
+            borderRadius: BorderRadius.circular(15),
+            border: Border.all(
+                color: exerciseSet!.isSetDone ? const Color(0xFF00BF33) : const Color(0xFFE0E0E0),
+                style: BorderStyle.solid,
+                width: 1
             ),
-            child: Padding(
-              padding: const EdgeInsets.only(left: 15, top: 10, right: 15, bottom: 10),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    exerciseList!.length == 1 ? "Set ${widget.exerciseSetIndex + 1}" : "Set ${widget.exerciseSetIndex + 1} (${exercise.exerciseName})",
-                    style: const TextStyle(
-                        color: Color(0xFF313131),
-                        fontSize: 18,
-                        fontWeight: FontWeight.w500
-                    ),
+            boxShadow: exerciseSet!.isSetDone ? const [
+              BoxShadow(
+                color: Color(0x8000BF33),
+                spreadRadius: 0,
+                blurRadius: 5,
+                offset: Offset(0, 0),
+              ),
+            ] : const [
+              BoxShadow(
+                color: Color(0x1A000000),
+                spreadRadius: 0,
+                blurRadius: 2,
+                offset: Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Padding(
+            padding: const EdgeInsets.only(left: 15, top: 10, right: 15, bottom: 10),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                exerciseList!.length == 1
+                ? Text(
+                  "Set ${widget.exerciseSetIndex + 1}",
+                  style: const TextStyle(
+                      color: Color(0xFF313131),
+                      fontSize: 18,
+                      fontWeight: FontWeight.w500
                   ),
-                  const SizedBox(height: 5),
-                  const Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                          "Recorded weight and reps",
-                          style: TextStyle(
-                              color: Color(0xFF696969),
-                              fontSize: 12,
-                              fontWeight: FontWeight.w500
-                          )
+                )
+                : Row(
+                  children: [
+                    Text(
+                      "Set ${widget.exerciseSetIndex + 1}",
+                      style: const TextStyle(
+                          color: Color(0xFF313131),
+                          fontSize: 18,
+                          fontWeight: FontWeight.w500
                       ),
-                      Text(
-                          "Target :",
-                          style: TextStyle(
-                              color: Color(0xFF005EAA),
-                              fontSize: 12,
-                              fontWeight: FontWeight.w500
-                          )
-                      )
-                    ],
-                  ),
-                  const SizedBox(height: 3),
-                  IntrinsicHeight(
-                    child: Row(
-                      children: [
-                        Row(
-                          children: [
-                            Text(
-                                exerciseSet.setCurrentWeight.toString(),
-                                style: const TextStyle(
-                                    color: Color(0xFF262626),
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.w500
-                                )
-                            ),
-                            const SizedBox(width: 5),
-                            const Text(
-                                "KG",
-                                style: TextStyle(
-                                    color: Color(0xFF262626),
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w500
-                                )
-                            )
-                          ],
-                        ),
-                        const VerticalDivider(
-                          width: 20,
-                          thickness: 1,
-                          color: Color(0xFFE0E0E0),
-                          indent: 3,
-                          endIndent: 3,
-                        ),
-                        Row(
-                          children: [
-                            Text(
-                              exerciseSet.setCurrentReps.toString(),
+                    ),
+                    const SizedBox(width: 5),
+                    Text(
+                      "(${exercise.exerciseName})",
+                      style: const TextStyle(
+                          color: Color(0xFF696969),
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 5),
+                const Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                        "Recorded weight and reps",
+                        style: TextStyle(
+                            color: Color(0xFF696969),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500
+                        )
+                    ),
+                    Text(
+                        "Target :",
+                        style: TextStyle(
+                            color: Color(0xFF005EAA),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500
+                        )
+                    )
+                  ],
+                ),
+                const SizedBox(height: 3),
+                IntrinsicHeight(
+                  child: Row(
+                    children: [
+                      Row(
+                        children: [
+                          Text(
+                              exerciseSet!.setCurrentWeight.toString(),
                               style: const TextStyle(
                                   color: Color(0xFF262626),
                                   fontSize: 20,
                                   fontWeight: FontWeight.w500
-                              ),
-                            ),
-                            const SizedBox(width: 5),
-                            const Text(
-                                "reps",
-                                style: TextStyle(
-                                    color: Color(0xFF262626),
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w500
-                                )
-                            )
-                          ],
-                        ),
-                        const Spacer(),
-                        Row(
-                          children: [
-                            Text(
-                              exerciseSet.setTargetReps.toString(),
-                              style: const TextStyle(
-                                  color: Color(0xFF005EAA),
-                                  fontSize: 20,
+                              )
+                          ),
+                          const SizedBox(width: 5),
+                          const Text(
+                              "KG",
+                              style: TextStyle(
+                                  color: Color(0xFF262626),
+                                  fontSize: 12,
                                   fontWeight: FontWeight.w500
-                              ),
-                            ),
-                            const SizedBox(width: 5),
-                            const Text(
-                                "reps",
-                                style: TextStyle(
-                                    color: Color(0xFF005EAA),
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w500
-                                )
-                            )
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                  exerciseSet.setCurrentReps == exerciseSet.setTargetReps
-                      ? const Text(
-                      "You hit your target reps!",
-                      style: TextStyle(
-                          color: Color(0xFF00BF33),
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500
-                      )
-                  )
-                      : const SizedBox.shrink(),
-                  const Divider(
-                    height: 20,
-                    thickness: 1,
-                    color: Color(0xFFE0E0E0),
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(
-                          "Enter weight:",
-                          style: TextStyle(
-                              color: Color(0xFF696969),
-                              fontSize: 12
+                              )
                           )
+                        ],
                       ),
-                      SizedBox(
-                        width: 110,
-                        height: 35,
-                        child: Theme(
-                          data: Theme.of(context).copyWith(
-                            textSelectionTheme: const TextSelectionThemeData(
-                              cursorColor: Color(0xFF005EAA),
-                              selectionColor: Color(0x4D005EAA),
-                              selectionHandleColor: Color(0xFF005EAA),
-                            ),
-                          ),
-                          child: TextField(
-                            controller: weightController,
-                            keyboardType: TextInputType.number,
-                            onChanged: (inputWeight) {
-                              exerciseSet.setCurrentWeight = double.tryParse(inputWeight) ?? exerciseSet.setCurrentWeight;
-                              if (weightController.text != "" && double.parse(weightController.text) > 0 && repsController.text != "" && double.parse(repsController.text) > 0) {
-                                exerciseSet.isSetDone = true;
-                              } else {
-                                exerciseSet.isSetDone = false;
-                              }
-                              debugPrint("InputWeight is $inputWeight whereas updated weight now is ${exerciseSet.setCurrentWeight}");
-                            },
-                            textAlign: TextAlign.left,
-                            textAlignVertical: TextAlignVertical.center,
-                            style: const TextStyle(
-                              color: Color(0xFF262626),
-                              fontSize: 18,
-                            ),
-                            decoration: InputDecoration(
-                                filled: true,
-                                fillColor: const Color(0xFFF8F8F8),
-                                contentPadding: const EdgeInsets.only(left: 10, right: 10),
-                                hintText: "-",
-                                hintStyle: const TextStyle(
-                                    color: Color(0xFFAAAAAA),
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w400
-                                ),
-                                suffixText: 'KG', // Read-only suffix
-                                suffixStyle: const TextStyle(
-                                    color: Color(0xFF262626),
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w500
-                                ),
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(5),
-                                  borderSide: const BorderSide(
-                                    color: Color(0xFF696969),
-                                    width: 1,
-                                  ),
-                                ),
-                                focusedBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(5),
-                                  borderSide: const BorderSide(
-                                    color: Color(0xFF005EAA),
-                                    width: 2,
-                                  ),
-                                )
-                            ),
-                          ),
-                        ),
+                      const VerticalDivider(
+                        width: 20,
+                        thickness: 1,
+                        color: Color(0xFFE0E0E0),
+                        indent: 3,
+                        endIndent: 3,
                       ),
-                    ],
-                  ),
-                  const SizedBox(height: 10),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(
-                          "Enter reps:",
-                          style: TextStyle(
-                              color: Color(0xFF696969),
-                              fontSize: 12
-                          )
-                      ),
-                      SizedBox(
-                        width: 110,
-                        height: 35,
-                        child: Theme(
-                          data: Theme.of(context).copyWith(
-                            textSelectionTheme: const TextSelectionThemeData(
-                              cursorColor: Color(0xFF005EAA),
-                              selectionColor: Color(0x4D005EAA),
-                              selectionHandleColor: Color(0xFF005EAA),
-                            ),
-                          ),
-                          child: TextField(
-                            controller: repsController,
-                            keyboardType: TextInputType.number,
-                            onChanged: (inputReps) {
-                              exerciseSet.setCurrentReps = int.tryParse(inputReps) ?? exerciseSet.setCurrentReps;
-                              if (weightController.text != "" && double.parse(weightController.text) > 0 && repsController.text != "" && double.parse(repsController.text) > 0) {
-                                exerciseSet.isSetDone = true;
-                              } else {
-                                exerciseSet.isSetDone = false;
-                              }
-                              debugPrint("InputWeight is $inputReps whereas updated weight now is ${exerciseSet.setCurrentReps}");
-                            },
-                            textAlign: TextAlign.left,
-                            textAlignVertical: TextAlignVertical.center,
-                            style: const TextStyle(
-                              color: Color(0xFF262626),
-                              fontSize: 18,
-                            ),
-                            decoration: InputDecoration(
-                                filled: true,
-                                fillColor: const Color(0xFFF8F8F8),
-                                contentPadding: const EdgeInsets.only(left: 10, right: 10),
-                                hintText: "-",
-                                hintStyle: const TextStyle(
-                                    color: Color(0xFFC4C4C4),
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w400
-                                ),
-                                suffixText: 'reps', // Read-only suffix
-                                suffixStyle: const TextStyle(
-                                    color: Color(0xFF262626),
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w500
-                                ),
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(5),
-                                  borderSide: const BorderSide(
-                                    color: Color(0xFF696969),
-                                    width: 1,
-                                  ),
-                                ),
-                                focusedBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(5),
-                                  borderSide: const BorderSide(
-                                    color: Color(0xFF005EAA),
-                                    width: 2,
-                                  ),
-                                )
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-          Container(
-            width: 4,  // Make it look like a pipe
-            height: 20,
-            color: Colors.grey,
-          ),
-        ],
-      );
-    } else {
-      return Container(
-        decoration: BoxDecoration(
-          color: const Color(0xFFF8F8F8),
-          borderRadius: BorderRadius.circular(15),
-          border: Border.all(
-              color: exerciseSet.isSetDone ? const Color(0xFF00BF33) : const Color(0xFFE0E0E0),
-              style: BorderStyle.solid,
-              width: 1
-          ),
-          boxShadow: exerciseSet.isSetDone ? const [
-            BoxShadow(
-              color: Color(0x8000BF33),
-              spreadRadius: 0,
-              blurRadius: 5,
-              offset: Offset(0, 0),
-            ),
-          ] : const [
-            BoxShadow(
-              color: Color(0x1A000000),
-              spreadRadius: 0,
-              blurRadius: 2,
-              offset: Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Padding(
-          padding: const EdgeInsets.only(left: 15, top: 10, right: 15, bottom: 10),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                exerciseList!.length == 1 ? "Set ${widget.exerciseSetIndex + 1}" : "Set ${widget.exerciseSetIndex + 1} (${exercise.exerciseName})",
-                style: const TextStyle(
-                    color: Color(0xFF313131),
-                    fontSize: 18,
-                    fontWeight: FontWeight.w500
-                ),
-              ),
-              const SizedBox(height: 5),
-              const Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                      "Recorded weight and reps",
-                      style: TextStyle(
-                          color: Color(0xFF696969),
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500
-                      )
-                  ),
-                  Text(
-                      "Target :",
-                      style: TextStyle(
-                          color: Color(0xFF005EAA),
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500
-                      )
-                  )
-                ],
-              ),
-              const SizedBox(height: 3),
-              IntrinsicHeight(
-                child: Row(
-                  children: [
-                    Row(
-                      children: [
-                        Text(
-                            exerciseSet.setCurrentWeight.toString(),
+                      Row(
+                        children: [
+                          Text(
+                            exerciseSet!.setCurrentReps.toString(),
                             style: const TextStyle(
                                 color: Color(0xFF262626),
                                 fontSize: 20,
                                 fontWeight: FontWeight.w500
-                            )
-                        ),
-                        const SizedBox(width: 5),
-                        const Text(
-                            "KG",
-                            style: TextStyle(
-                                color: Color(0xFF262626),
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500
-                            )
-                        )
-                      ],
-                    ),
-                    const VerticalDivider(
-                      width: 20,
-                      thickness: 1,
-                      color: Color(0xFFE0E0E0),
-                      indent: 3,
-                      endIndent: 3,
-                    ),
-                    Row(
-                      children: [
-                        Text(
-                          exerciseSet.setCurrentReps.toString(),
-                          style: const TextStyle(
-                              color: Color(0xFF262626),
-                              fontSize: 20,
-                              fontWeight: FontWeight.w500
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: 5),
-                        const Text(
-                            "reps",
-                            style: TextStyle(
-                                color: Color(0xFF262626),
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500
-                            )
-                        )
-                      ],
-                    ),
-                    const Spacer(),
-                    Row(
-                      children: [
-                        Text(
-                          exerciseSet.setTargetReps.toString(),
-                          style: const TextStyle(
-                              color: Color(0xFF005EAA),
-                              fontSize: 20,
-                              fontWeight: FontWeight.w500
-                          ),
-                        ),
-                        const SizedBox(width: 5),
-                        const Text(
-                            "reps",
-                            style: TextStyle(
+                          const SizedBox(width: 5),
+                          const Text(
+                              "reps",
+                              style: TextStyle(
+                                  color: Color(0xFF262626),
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500
+                              )
+                          )
+                        ],
+                      ),
+                      const Spacer(),
+                      Row(
+                        children: [
+                          Text(
+                            exerciseSet!.setTargetReps.toString(),
+                            style: const TextStyle(
                                 color: Color(0xFF005EAA),
-                                fontSize: 12,
+                                fontSize: 20,
                                 fontWeight: FontWeight.w500
-                            )
+                            ),
+                          ),
+                          const SizedBox(width: 5),
+                          const Text(
+                              "reps",
+                              style: TextStyle(
+                                  color: Color(0xFF005EAA),
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500
+                              )
+                          )
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                exerciseSet!.setCurrentReps == exerciseSet!.setTargetReps
+                    ? const Text(
+                    "You hit your target reps!",
+                    style: TextStyle(
+                        color: Color(0xFF00BF33),
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500
+                    )
+                )
+                    : const SizedBox.shrink(),
+                const Divider(
+                  height: 20,
+                  thickness: 1,
+                  color: Color(0xFFE0E0E0),
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                        "Enter weight:",
+                        style: TextStyle(
+                            color: Color(0xFF696969),
+                            fontSize: 12
                         )
-                      ],
+                    ),
+                    SizedBox(
+                      width: 110,
+                      height: 35,
+                      child: Theme(
+                        data: Theme.of(context).copyWith(
+                          textSelectionTheme: const TextSelectionThemeData(
+                            cursorColor: Color(0xFF005EAA),
+                            selectionColor: Color(0x4D005EAA),
+                            selectionHandleColor: Color(0xFF005EAA),
+                          ),
+                        ),
+                        child: TextField(
+                          controller: weightController,
+                          keyboardType: TextInputType.number,
+                          onChanged: (inputWeight) {
+                            exerciseSet!.setCurrentWeight = double.tryParse(inputWeight) ?? exerciseSet!.setCurrentWeight;
+                            if (weightController.text != "" && double.parse(weightController.text) > 0 && repsController.text != "" && double.parse(repsController.text) > 0) {
+                              exerciseSet!.isSetDone = true;
+                            } else {
+                              exerciseSet!.isSetDone = false;
+                            }
+                            debugPrint("InputWeight is $inputWeight whereas updated weight now is ${exerciseSet!.setCurrentWeight}");
+                          },
+                          textAlign: TextAlign.left,
+                          textAlignVertical: TextAlignVertical.center,
+                          style: const TextStyle(
+                            color: Color(0xFF262626),
+                            fontSize: 18,
+                          ),
+                          decoration: InputDecoration(
+                              filled: true,
+                              fillColor: const Color(0xFFF8F8F8),
+                              contentPadding: const EdgeInsets.only(left: 10, right: 10),
+                              hintText: "-",
+                              hintStyle: const TextStyle(
+                                  color: Color(0xFFAAAAAA),
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w400
+                              ),
+                              suffixText: 'KG', // Read-only suffix
+                              suffixStyle: const TextStyle(
+                                  color: Color(0xFF262626),
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500
+                              ),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(5),
+                                borderSide: const BorderSide(
+                                  color: Color(0xFF696969),
+                                  width: 1,
+                                ),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(5),
+                                borderSide: const BorderSide(
+                                  color: Color(0xFF005EAA),
+                                  width: 2,
+                                ),
+                              )
+                          ),
+                        ),
+                      ),
                     ),
                   ],
                 ),
-              ),
-              exerciseSet.setCurrentReps == exerciseSet.setTargetReps
-                  ? const Text(
-                  "You hit your target reps!",
-                  style: TextStyle(
-                      color: Color(0xFF00BF33),
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500
-                  )
-              )
-                  : const SizedBox.shrink(),
-              const Divider(
-                height: 20,
-                thickness: 1,
-                color: Color(0xFFE0E0E0),
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                      "Enter weight:",
-                      style: TextStyle(
-                          color: Color(0xFF696969),
-                          fontSize: 12
-                      )
-                  ),
-                  SizedBox(
-                    width: 110,
-                    height: 35,
-                    child: Theme(
-                      data: Theme.of(context).copyWith(
-                        textSelectionTheme: const TextSelectionThemeData(
-                          cursorColor: Color(0xFF005EAA),
-                          selectionColor: Color(0x4D005EAA),
-                          selectionHandleColor: Color(0xFF005EAA),
+                const SizedBox(height: 10),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                        "Enter reps:",
+                        style: TextStyle(
+                            color: Color(0xFF696969),
+                            fontSize: 12
+                        )
+                    ),
+                    SizedBox(
+                      width: 110,
+                      height: 35,
+                      child: Theme(
+                        data: Theme.of(context).copyWith(
+                          textSelectionTheme: const TextSelectionThemeData(
+                            cursorColor: Color(0xFF005EAA),
+                            selectionColor: Color(0x4D005EAA),
+                            selectionHandleColor: Color(0xFF005EAA),
+                          ),
                         ),
-                      ),
-                      child: TextField(
-                        controller: weightController,
-                        keyboardType: TextInputType.number,
-                        onChanged: (inputWeight) {
-                          exerciseSet.setCurrentWeight = double.tryParse(inputWeight) ?? exerciseSet.setCurrentWeight;
-                          if (weightController.text != "" && double.parse(weightController.text) > 0 && repsController.text != "" && double.parse(repsController.text) > 0) {
-                            exerciseSet.isSetDone = true;
-                          } else {
-                            exerciseSet.isSetDone = false;
-                          }
-                          debugPrint("InputWeight is $inputWeight whereas updated weight now is ${exerciseSet.setCurrentWeight}");
-                        },
-                        textAlign: TextAlign.left,
-                        textAlignVertical: TextAlignVertical.center,
-                        style: const TextStyle(
-                          color: Color(0xFF262626),
-                          fontSize: 18,
-                        ),
-                        decoration: InputDecoration(
-                            filled: true,
-                            fillColor: const Color(0xFFF8F8F8),
-                            contentPadding: const EdgeInsets.only(left: 10, right: 10),
-                            hintText: "-",
-                            hintStyle: const TextStyle(
-                                color: Color(0xFFAAAAAA),
-                                fontSize: 18,
-                                fontWeight: FontWeight.w400
-                            ),
-                            suffixText: 'KG', // Read-only suffix
-                            suffixStyle: const TextStyle(
-                                color: Color(0xFF262626),
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500
-                            ),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(5),
-                              borderSide: const BorderSide(
-                                color: Color(0xFF696969),
-                                width: 1,
+                        child: TextField(
+                          controller: repsController,
+                          keyboardType: TextInputType.number,
+                          onChanged: (inputReps) {
+                            exerciseSet!.setCurrentReps = int.tryParse(inputReps) ?? exerciseSet!.setCurrentReps;
+                            if (weightController.text != "" && double.parse(weightController.text) > 0 && repsController.text != "" && double.parse(repsController.text) > 0) {
+                              exerciseSet!.isSetDone = true;
+                            } else {
+                              exerciseSet!.isSetDone = false;
+                            }
+                            debugPrint("InputWeight is $inputReps whereas updated weight now is ${exerciseSet!.setCurrentReps}");
+                          },
+                          textAlign: TextAlign.left,
+                          textAlignVertical: TextAlignVertical.center,
+                          style: const TextStyle(
+                            color: Color(0xFF262626),
+                            fontSize: 18,
+                          ),
+                          decoration: InputDecoration(
+                              filled: true,
+                              fillColor: const Color(0xFFF8F8F8),
+                              contentPadding: const EdgeInsets.only(left: 10, right: 10),
+                              hintText: "-",
+                              hintStyle: const TextStyle(
+                                  color: Color(0xFFC4C4C4),
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w400
                               ),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(5),
-                              borderSide: const BorderSide(
-                                color: Color(0xFF005EAA),
-                                width: 2,
+                              suffixText: 'reps', // Read-only suffix
+                              suffixStyle: const TextStyle(
+                                  color: Color(0xFF262626),
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500
                               ),
-                            )
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(5),
+                                borderSide: const BorderSide(
+                                  color: Color(0xFF696969),
+                                  width: 1,
+                                ),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(5),
+                                borderSide: const BorderSide(
+                                  color: Color(0xFF005EAA),
+                                  width: 2,
+                                ),
+                              )
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 10),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                      "Enter reps:",
-                      style: TextStyle(
-                          color: Color(0xFF696969),
-                          fontSize: 12
-                      )
-                  ),
-                  SizedBox(
-                    width: 110,
-                    height: 35,
-                    child: Theme(
-                      data: Theme.of(context).copyWith(
-                        textSelectionTheme: const TextSelectionThemeData(
-                          cursorColor: Color(0xFF005EAA),
-                          selectionColor: Color(0x4D005EAA),
-                          selectionHandleColor: Color(0xFF005EAA),
-                        ),
-                      ),
-                      child: TextField(
-                        controller: repsController,
-                        keyboardType: TextInputType.number,
-                        onChanged: (inputReps) {
-                          exerciseSet.setCurrentReps = int.tryParse(inputReps) ?? exerciseSet.setCurrentReps;
-                          if (weightController.text != "" && double.parse(weightController.text) > 0 && repsController.text != "" && double.parse(repsController.text) > 0) {
-                            exerciseSet.isSetDone = true;
-                          } else {
-                            exerciseSet.isSetDone = false;
-                          }
-                          debugPrint("InputWeight is $inputReps whereas updated weight now is ${exerciseSet.setCurrentReps}");
-                        },
-                        textAlign: TextAlign.left,
-                        textAlignVertical: TextAlignVertical.center,
-                        style: const TextStyle(
-                          color: Color(0xFF262626),
-                          fontSize: 18,
-                        ),
-                        decoration: InputDecoration(
-                            filled: true,
-                            fillColor: const Color(0xFFF8F8F8),
-                            contentPadding: const EdgeInsets.only(left: 10, right: 10),
-                            hintText: "-",
-                            hintStyle: const TextStyle(
-                                color: Color(0xFFC4C4C4),
-                                fontSize: 18,
-                                fontWeight: FontWeight.w400
-                            ),
-                            suffixText: 'reps', // Read-only suffix
-                            suffixStyle: const TextStyle(
-                                color: Color(0xFF262626),
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500
-                            ),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(5),
-                              borderSide: const BorderSide(
-                                color: Color(0xFF696969),
-                                width: 1,
-                              ),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(5),
-                              borderSide: const BorderSide(
-                                color: Color(0xFF005EAA),
-                                width: 2,
-                              ),
-                            )
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
-      );
-    }
+        nextSetIndex < nextExerciseSetLength
+        ? nextSetIndex == widget.exerciseSetIndex
+          ? Column(
+          children: [
+            Container(
+              height: 4,
+              width: 8,
+              decoration: const BoxDecoration(
+                color: Color(0xFF005EAA),
+                borderRadius: BorderRadius.vertical(
+                  bottom: Radius.circular(100),
+                ),
+              ),
+            ),
+            Container(
+              width: 3,  // Make it look like a pipe
+              height: 10,
+              color: const Color(0xFF005EAA),
+            ),
+            Container(
+              height: 4,
+              width: 8,
+              decoration: const BoxDecoration(
+                color: Color(0xFF005EAA),
+                borderRadius: BorderRadius.vertical(
+                  top: Radius.circular(100),
+                ),
+              ),
+            )
+          ],
+        )
+          : const SizedBox(height: 15,)
+        : const SizedBox(height: 15,)
+      ],
+    ) : const SizedBox.shrink();
   }
 }
